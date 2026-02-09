@@ -1,0 +1,53 @@
+version: '3.9'
+
+services:
+  db:
+    image: postgres:16
+    environment:
+      POSTGRES_DB: rass_db
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: trigga
+    ports:
+      - '5433:5432'
+    volumes:
+      - db_data:/var/lib/postgresql/data
+
+  api:
+    build:
+      context: .
+      dockerfile: backend/Dockerfile
+    environment:
+      ASPNETCORE_ENVIRONMENT: Development
+      ConnectionStrings__Default: Host=db;Port=5432;Database=rass_db;Username=postgres;Password=trigga
+      Jwt__Issuer: rass.local
+      Jwt__Audience: rass.clients
+      Jwt__SigningKey: super-secret-rass-signing-key-change-me
+    depends_on:
+      - db
+    ports:
+      - '8080:8080'
+
+  frontend:
+    build:
+      context: .
+      dockerfile: frontend/Dockerfile
+    environment:
+      VITE_API_URL: http://api:8080
+    depends_on:
+      - api
+    ports:
+      - '4173:4173'
+
+  pgadmin:
+    image: dpage/pgadmin4:8.12
+    environment:
+      PGADMIN_DEFAULT_EMAIL: admin@rass.local
+      PGADMIN_DEFAULT_PASSWORD: admin123
+    depends_on:
+      - db
+    ports:
+      - '5050:80'
+
+volumes:
+  db_data:
+
