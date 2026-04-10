@@ -1,0 +1,31 @@
+﻿src/pages/AdminPage.tsx(156,9): error TS6133: 'handleSuspendUser' is declared but its value is never read.
+src/pages/AdminPage.tsx(406,74): error TS2551: Property 'FullName' does not exist on type 'User'. Did you mean 'fullName'?
+src/pages/AdminPage.tsx(407,72): error TS2551: Property 'Email' does not exist on type 'User'. Did you mean 'email'?
+src/pages/AdminPage.tsx(410,38): error TS2551: Property 'Role' does not exist on type 'User'. Did you mean 'role'?
+src/pages/AdminPage.tsx(410,51): error TS2551: Property 'roles' does not exist on type 'User'. Did you mean 'role'?
+src/pages/AdminPage.tsx(410,64): error TS2551: Property 'roles' does not exist on type 'User'. Did you mean 'role'?
+src/pages/AdminPage.tsx(410,82): error TS2551: Property 'Roles' does not exist on type 'User'. Did you mean 'role'?
+src/pages/AdminPage.tsx(410,95): error TS2551: Property 'Roles' does not exist on type 'User'. Did you mean 'role'?
+src/pages/AdminPage.tsx(414,84): error TS2551: Property 'IsActive' does not exist on type 'User'. Did you mean 'isActive'?
+src/pages/BuyerDashboardPage.tsx(5,1): error TS6133: 'DataTable' is declared but its value is never read.
+src/pages/BuyerDashboardPage.tsx(13,10): error TS6133: 'payments' is declared but its value is never read.
+src/pages/BuyerDashboardPage.tsx(13,20): error TS6133: 'setPayments' is declared but its value is never read.
+src/pages/CooperativeDashboardPage.tsx(15,10): error TS6133: 'transporters' is declared but its value is never read.
+src/pages/CooperativeDashboardPage.tsx(15,24): error TS6133: 'setTransporters' is declared but its value is never read.
+src/pages/CooperativeDashboardPage.tsx(23,10): error TS6133: 'showStorageModal' is declared but its value is never read.
+src/pages/CooperativeDashboardPage.tsx(24,10): error TS6133: 'showTransporterModal' is declared but its value is never read.
+src/pages/CooperativeDashboardPage.tsx(25,10): error TS6133: 'showPaymentModal' is declared but its value is never read.
+src/pages/CooperativeDashboardPage.tsx(195,29): error TS6133: 'farmer' is declared but its value is never read.
+src/pages/CooperativeDashboardPage.tsx(200,41): error TS6133: 'farmer' is declared but its value is never read.
+src/pages/CooperativeDashboardPage.tsx(313,9): error TS6133: 'handleAssignStorage' is declared but its value is never read.
+src/pages/CooperativeDashboardPage.tsx(328,9): error TS6133: 'handleAssignTransporter' is declared but its value is never read.
+src/pages/CooperativeDashboardPage.tsx(342,9): error TS6133: 'handleSettlePayments' is declared but its value is never read.
+src/pages/CooperativeManagementPage.tsx(4,1): error TS6133: 'Modal' is declared but its value is never read.
+src/pages/DashboardPage.tsx(3,15): error TS6133: 'Stack' is declared but its value is never read.
+src/pages/DashboardPage.tsx(7,11): error TS6133: 'user' is declared but its value is never read.
+src/pages/GovernmentDashboardPage.tsx(4,1): error TS6133: 'MarketPrice' is declared but its value is never read.
+src/pages/MarketplacePage.tsx(64,24): error TS6133: 'setFilterRegion' is declared but its value is never read.
+src/pages/MarketplacePage.tsx(65,22): error TS6133: 'setFilterCrop' is declared but its value is never read.
+src/pages/MarketplacePage.tsx(113,32): error TS6133: 'cooperativeId' is declared but its value is never read.
+src/pages/TransporterDashboardPage.tsx(92,34): error TS6133: 'job' is declared but its value is never read.
+src/pages/TransporterDashboardPage.tsx(130,9): error TS6133: 'handleConfirmDelivery' is declared but its value is never read.

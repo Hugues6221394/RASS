@@ -22,6 +22,18 @@ public class HarvestDeclaration
     [MaxLength(40)]
     public string Status { get; set; } = "Pending"; // Pending, Approved, Rejected
 
+    /// <summary>
+    /// Condition grade set by cooperative manager during approval.
+    /// </summary>
+    [MaxLength(30)]
+    public string? ConditionGrade { get; set; } // Excellent, Good, MinorDefects, ModerateDamage, HighSpoilage
+
+    /// <summary>
+    /// Detailed condition note from cooperative manager.
+    /// </summary>
+    [MaxLength(1000)]
+    public string? ConditionNote { get; set; }
+
     public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
 
     public DateTime? ReviewedAt { get; set; }

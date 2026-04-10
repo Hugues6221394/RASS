@@ -13,7 +13,7 @@ using System.Reflection;
 [assembly: System.Reflection.AssemblyCompanyAttribute("Rass.Api")]
 [assembly: System.Reflection.AssemblyConfigurationAttribute("Debug")]
 [assembly: System.Reflection.AssemblyFileVersionAttribute("1.0.0.0")]
-[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0")]
+[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+f2fd3470d0d13a2be8a59630def849aae871dc40")]
 [assembly: System.Reflection.AssemblyProductAttribute("Rass.Api")]
 [assembly: System.Reflection.AssemblyTitleAttribute("Rass.Api")]
 [assembly: System.Reflection.AssemblyVersionAttribute("1.0.0.0")]

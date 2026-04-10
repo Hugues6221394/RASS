@@ -1,3 +1,5 @@
+using System.IdentityModel.Tokens.Jwt;
+using System.Security.Claims;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.SignalR;
@@ -59,6 +61,24 @@ public class NotificationsController : ControllerBase
 
     /// <summary>
     /// Get unread notification count
+    /// </summary>
+    /// <summary>
+    /// Get unread notification count
+    /// </summary>
+    [HttpGet("badge-count")]
+    public async Task<IActionResult> GetBadgeCount()
+    {
+        var userId = GetUserId();
+        if (!userId.HasValue) return Unauthorized();
+
+        var count = await _db.Notifications
+            .CountAsync(n => n.UserId == userId.Value && !n.IsRead);
+
+        return Ok(new { count });
+    }
+
+    /// <summary>
+    /// Get unread notification count (Legacy)
     /// </summary>
     [HttpGet("count")]
     public async Task<IActionResult> GetUnreadCount()
@@ -184,13 +204,61 @@ public class NotificationsController : ControllerBase
         return Ok(new { sentTo = userIds.Count });
     }
 
+    [HttpPost("broadcast-urgent")]
+    [Authorize(Roles = "Admin")]
+    public async Task<IActionResult> BroadcastUrgentNotification(UrgentBroadcastRequest request)
+    {
+        if (string.IsNullOrWhiteSpace(request.Title) || string.IsNullOrWhiteSpace(request.Message))
+            return BadRequest("Title and message are required.");
+
+        var userIds = await _db.Users
+            .Where(u => u.IsActive)
+            .Select(u => u.Id)
+            .ToListAsync();
+
+        var now = DateTime.UtcNow;
+        var notifications = userIds.Select(userId => new Notification
+        {
+            Id = Guid.NewGuid(),
+            UserId = userId,
+            Title = request.Title.Trim(),
+            Message = request.Message.Trim(),
+            Type = "Warning",
+            ActionUrl = request.ActionUrl,
+            IsRead = false,
+            CreatedAt = now
+        }).ToList();
+
+        _db.Notifications.AddRange(notifications);
+        await _db.SaveChangesAsync();
+
+        foreach (var note in notifications)
+        {
+            await _hubContext.Clients.Group($"user-{note.UserId}")
+                .SendAsync("ReceiveNotification", new
+                {
+                    note.Id,
+                    note.Title,
+                    note.Message,
+                    note.Type,
+                    note.CreatedAt,
+                    note.ActionUrl
+                });
+        }
+
+        return Ok(new { sentTo = notifications.Count });
+    }
+
     private Guid? GetUserId()
     {
-        var claim = User.FindFirst("http://schemas.xmlsoap.org/ws/2005/05/identity/claims/nameidentifier") ??
-                   User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier);
+        var claim = User.FindFirst(ClaimTypes.NameIdentifier) ??
+                    User.FindFirst(JwtRegisteredClaimNames.Sub) ??
+                    User.FindFirst("sub") ??
+                    User.FindFirst("http://schemas.xmlsoap.org/ws/2005/05/identity/claims/nameidentifier");
         return Guid.TryParse(claim?.Value, out var guid) ? guid : null;
     }
 }
 
 public record SendNotificationRequest(Guid UserId, string Title, string Message, string? Type, string? ActionUrl);
 public record BroadcastNotificationRequest(string Role, string Title, string Message, string? Type);
+public record UrgentBroadcastRequest(string Title, string Message, string? ActionUrl);

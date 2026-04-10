@@ -186,6 +186,11 @@ public class CartController : ControllerBase
         var userId = GetUserId();
         if (!userId.HasValue) return Unauthorized();
 
+        if (request.DeliveryWindowStart > request.DeliveryWindowEnd)
+        {
+            return BadRequest("Delivery window start must be before end.");
+        }
+
         var buyerProfile = await _db.BuyerProfiles
             .FirstOrDefaultAsync(b => b.UserId == userId.Value);
 
@@ -204,14 +209,25 @@ public class CartController : ControllerBase
 
         foreach (var item in cartItems)
         {
+            var listing = item.MarketListing;
+            if (listing == null || listing.Status != "Active")
+            {
+                return BadRequest($"Listing {item.MarketListingId} is no longer available.");
+            }
+
+            if (item.QuantityKg > listing.QuantityKg)
+            {
+                return BadRequest($"Listing {listing.Crop} has only {listing.QuantityKg} kg available.");
+            }
+
             var order = new BuyerOrder
             {
                 Id = Guid.NewGuid(),
                 BuyerProfileId = buyerProfile.Id,
                 MarketListingId = item.MarketListingId,
-                Crop = item.MarketListing!.Crop,
+                Crop = listing.Crop,
                 QuantityKg = item.QuantityKg,
-                PriceOffer = item.MarketListing.MinimumPrice,
+                PriceOffer = listing.MinimumPrice,
                 DeliveryLocation = request.DeliveryLocation,
                 DeliveryWindowStart = request.DeliveryWindowStart,
                 DeliveryWindowEnd = request.DeliveryWindowEnd,

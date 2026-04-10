@@ -1,0 +1,24 @@
+{
+  "name": "rass",
+  "version": "1.0.0",
+  "description": "��#\u0000 \u0000R\u0000A\u0000S\u0000S\u0000\r\u0000 \u0000",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Hugues6221394/RASS.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "commonjs",
+  "bugs": {
+    "url": "https://github.com/Hugues6221394/RASS/issues"
+  },
+  "homepage": "https://github.com/Hugues6221394/RASS#readme",
+  "dependencies": {
+    "fastapi": "^0.0.8"
+  }
+}

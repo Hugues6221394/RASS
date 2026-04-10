@@ -10,8 +10,54 @@ from datetime import datetime, timedelta
 from enum import Enum
 import math
 import logging
+import pandas as pd
 
 logger = logging.getLogger(__name__)
+
+# Try to import advanced ML libraries safely
+try:
+    from prophet import Prophet
+    PROPHET_AVAILABLE = True
+except ImportError:
+    PROPHET_AVAILABLE = False
+    logger.warning("Prophet not available. Falling back to Holt-Linear model.")
+
+try:
+    from statsmodels.tsa.statespace.sarimax import SARIMAX
+    SARIMA_AVAILABLE = True
+except ImportError:
+    SARIMA_AVAILABLE = False
+    logger.warning("statsmodels not available. SARIMA model disabled.")
+
+try:
+    from sklearn.ensemble import GradientBoostingRegressor
+    SKLEARN_AVAILABLE = True
+except ImportError:
+    SKLEARN_AVAILABLE = False
+    logger.warning("scikit-learn not available. Gradient boosting disabled.")
+
+try:
+    import xgboost as xgb
+    XGBOOST_AVAILABLE = True
+except (ImportError, Exception) as e:
+    XGBOOST_AVAILABLE = False
+    logger.warning(f"XGBoost not available: {e}")
+    xgb = None
+
+try:
+    import lightgbm as lgb
+    LIGHTGBM_AVAILABLE = True
+except (ImportError, Exception) as e:
+    LIGHTGBM_AVAILABLE = False
+    logger.warning(f"LightGBM not available: {e}")
+    lgb = None
+
+try:
+    import numpy as np
+    NUMPY_AVAILABLE = True
+except ImportError:
+    NUMPY_AVAILABLE = False
+    logger.warning("NumPy not available. LSTMLiteModel will use Holt-Linear fallback.")
 
 
 # ============================================================================
@@ -315,6 +361,170 @@ class HoltLinearModel:
 
 
 # ============================================================================
+# LSTM-LITE MODEL (Pure NumPy — single-layer Elman RNN with input gating)
+# ============================================================================
+
+class LSTMLiteModel:
+    """
+    Lightweight LSTM-inspired recurrent model using pure NumPy.
+
+    Architecture: single-layer Elman RNN with a sigmoid input gate and tanh
+    hidden activation — sufficient to capture short-term temporal patterns in
+    agricultural price series.
+
+    Falls back to HoltLinearModel when NumPy is unavailable or training fails.
+
+    Public API
+    ----------
+    fit(prices: List[float])
+    forecast(steps: int) -> List[float]
+    """
+
+    def __init__(self, hidden_size: int = 8, learning_rate: float = 0.01, epochs: int = 100):
+        self.hidden_size = hidden_size
+        self.lr = learning_rate
+        self.epochs = epochs
+        self._fitted = False
+        self._fallback = HoltLinearModel()
+        # Weight matrices — initialised during fit()
+        self.Wx = None
+        self.Wh = None
+        self.b  = None
+        self.Wy = None
+        self.by = None
+        self._h_last = None
+        self._last_val = 0.0
+        self._mu: float = 0.0
+        self._sigma: float = 1.0
+
+    # ------------------------------------------------------------------
+    # Private helpers
+    # ------------------------------------------------------------------
+
+    def _sigmoid(self, x):
+        """Numerically-stable sigmoid."""
+        return np.where(x >= 0, 1.0 / (1.0 + np.exp(-x)), np.exp(x) / (1.0 + np.exp(x)))
+
+    def _normalise(self, prices: List[float]):
+        arr = np.array(prices, dtype=np.float64)
+        self._mu = float(arr.mean())
+        self._sigma = float(arr.std()) + 1e-8
+        return (arr - self._mu) / self._sigma
+
+    def _denormalise(self, arr):
+        return arr * self._sigma + self._mu
+
+    # ------------------------------------------------------------------
+    # Public API
+    # ------------------------------------------------------------------
+
+    def fit(self, prices: List[float]) -> None:
+        """Train the model on a price series."""
+        if not NUMPY_AVAILABLE:
+            self._fallback.fit(prices)
+            self._fitted = True
+            return
+        try:
+            if len(prices) < 6:
+                self._fallback.fit(prices)
+                self._fitted = True
+                return
+
+            seq = self._normalise(prices)
+            n   = len(seq)
+            H   = self.hidden_size
+            rng = np.random.default_rng(42)
+
+            # Initialise weights (Xavier-ish)
+            scale = 0.1
+            self.Wx = rng.normal(0, scale, (H, 1))
+            self.Wh = rng.normal(0, scale, (H, H))
+            self.b  = np.zeros((H, 1))
+            self.Wy = rng.normal(0, scale, (1, H))
+            self.by = np.zeros((1, 1))
+
+            # Truncated BPTT — one step at a time
+            for _ in range(self.epochs):
+                h = np.zeros((H, 1))
+                dWx = np.zeros_like(self.Wx)
+                dWh = np.zeros_like(self.Wh)
+                db  = np.zeros_like(self.b)
+                dWy = np.zeros_like(self.Wy)
+                dby = np.zeros_like(self.by)
+
+                for t in range(n - 1):
+                    x_t    = np.array([[seq[t]]])
+                    y_true = np.array([[seq[t + 1]]])
+
+                    # Forward pass
+                    z       = self.Wx @ x_t + self.Wh @ h + self.b
+                    h_raw   = np.tanh(z)
+                    gate    = self._sigmoid(z)          # input gate
+                    h_new   = gate * h_raw + (1.0 - gate) * h
+                    y_hat_m = self.Wy @ h_new + self.by   # (1,1) matrix — used in backprop
+
+                    # Backward pass (one-step)
+                    dy   = 2.0 * (y_hat_m - y_true)
+                    dWy += dy * h_new.T
+                    dby += dy
+                    dh   = self.Wy.T @ dy
+                    dz   = dh * (1.0 - np.tanh(z) ** 2)
+                    dWx += dz @ x_t.T
+                    dWh += dz @ h.T
+                    db  += dz
+                    h    = h_new
+
+                # Gradient clipping + SGD update
+                for param, grad in [(self.Wx, dWx), (self.Wh, dWh),
+                                    (self.b, db), (self.Wy, dWy), (self.by, dby)]:
+                    np.clip(grad, -1.0, 1.0, out=grad)
+                    param -= self.lr * grad / max(n - 1, 1)
+
+            # Cache final hidden state for warm-start forecasting
+            h = np.zeros((H, 1))
+            for t in range(n - 1):
+                x_t  = np.array([[seq[t]]])
+                z    = self.Wx @ x_t + self.Wh @ h + self.b
+                h_rw = np.tanh(z)
+                gate = self._sigmoid(z)
+                h    = gate * h_rw + (1.0 - gate) * h
+
+            self._h_last  = h
+            self._last_val = float(seq[-1])
+            self._fitted   = True
+
+        except Exception as e:
+            logger.warning(f"LSTMLiteModel training failed ({e}). Using Holt fallback.")
+            self._fallback.fit(prices)
+            self._fitted = True
+
+    def forecast(self, steps: int) -> List[float]:
+        """Autoregressively forecast `steps` values ahead."""
+        if not NUMPY_AVAILABLE or self.Wx is None:
+            return self._fallback.forecast(steps)
+        try:
+            h   = self._h_last.copy()
+            val = self._last_val
+            raw_preds: List[float] = []
+
+            for _ in range(steps):
+                x_t  = np.array([[val]])
+                z    = self.Wx @ x_t + self.Wh @ h + self.b
+                h_rw = np.tanh(z)
+                gate = self._sigmoid(z)
+                h    = gate * h_rw + (1.0 - gate) * h
+                y_hat = float((self.Wy @ h + self.by).item())
+                raw_preds.append(y_hat)
+                val = y_hat
+
+            return [float(self._denormalise(np.array([p]))[0]) for p in raw_preds]
+
+        except Exception as e:
+            logger.warning(f"LSTMLiteModel forecast failed ({e}). Using Holt fallback.")
+            return self._fallback.forecast(steps)
+
+
+# ============================================================================
 # PURE PYTHON RIDGE REGRESSION (ML Layer)
 # ============================================================================
 
@@ -596,6 +806,271 @@ class DecisionEngine:
 
 
 # ============================================================================
+# ENSEMBLE FORECASTER
+# ============================================================================
+
+class EnsembleForecaster:
+    """
+    Combines Prophet + SARIMA + GBR + LSTMLite + Holt-Winters into a single
+    ensemble whose per-model weights are determined by inverse-RMSE from a
+    walk-forward validation split.
+
+    Public API
+    ----------
+    fit_and_weight(prices, dates=None)
+    forecast(steps, prices, dates=None) -> Dict
+        {
+          "ensemble"       : [{"date", "price", "lower", "upper"}, ...],
+          "models"         : {"prophet": [...], "sarima": [...], ...},
+          "modelWeights"   : {"prophet": 0.35, ...},
+          "bestModel"      : "prophet",
+          "ensembleAccuracy": 0.87,
+        }
+    """
+
+    MODEL_KEYS = ("prophet", "sarima", "gbr", "lstm", "holt")
+
+    def __init__(self):
+        self.holt_model  = HoltLinearModel(alpha=0.3, beta=0.1)
+        self.lstm_model  = LSTMLiteModel(hidden_size=8, epochs=80)
+        self.weights: Dict[str, float] = {}
+        self._trained_prices: List[float] = []
+
+    # ------------------------------------------------------------------
+    # RMSE helper
+    # ------------------------------------------------------------------
+    @staticmethod
+    def _rmse(actual: List[float], predicted: List[float]) -> float:
+        if not actual or not predicted:
+            return 1e6
+        n = min(len(actual), len(predicted))
+        return math.sqrt(sum((actual[i] - predicted[i]) ** 2 for i in range(n)) / n)
+
+    # ------------------------------------------------------------------
+    # Per-model runners (train + predict in one call for validation)
+    # ------------------------------------------------------------------
+    def _run_holt(self, train: List[float], steps: int) -> List[float]:
+        m = HoltLinearModel(alpha=0.3, beta=0.1)
+        m.fit(train)
+        return m.forecast(steps)
+
+    def _run_lstm(self, train: List[float], steps: int) -> List[float]:
+        m = LSTMLiteModel(hidden_size=8, epochs=60)
+        m.fit(train)
+        return m.forecast(steps)
+
+    def _run_sarima(self, train: List[float], steps: int) -> List[float]:
+        if not SARIMA_AVAILABLE or len(train) < 14:
+            return self._run_holt(train, steps)
+        try:
+            res = SARIMAX(
+                train, order=(1, 1, 1), seasonal_order=(0, 1, 1, 7),
+                enforce_stationarity=False, enforce_invertibility=False
+            ).fit(disp=False)
+            return [max(1.0, float(v)) for v in res.forecast(steps=steps)]
+        except Exception:
+            return self._run_holt(train, steps)
+
+    def _run_gbr(self, train: List[float], steps: int) -> List[float]:
+        if not SKLEARN_AVAILABLE or len(train) < 14:
+            return self._run_holt(train, steps)
+        try:
+            fe = FeatureEngineer()
+            X: List[List[float]] = []
+            y: List[float] = []
+            for i in range(7, len(train)):
+                lag  = fe.create_lag_features(train[:i])
+                roll = fe.create_rolling_features(train[:i])
+                X.append([
+                    lag.get("price_pct_change_1d", 0),
+                    lag.get("price_pct_change_7d", 0),
+                    roll.get("momentum", 0),
+                    roll.get("volatility_cv", 0),
+                ])
+                y.append(train[i])
+            if len(X) < 5:
+                return self._run_holt(train, steps)
+            gbr = GradientBoostingRegressor(
+                random_state=42, n_estimators=100, learning_rate=0.05, max_depth=3
+            )
+            gbr.fit(X, y)
+            history = list(train)
+            preds: List[float] = []
+            for _ in range(steps):
+                lag  = fe.create_lag_features(history)
+                roll = fe.create_rolling_features(history)
+                feat = [
+                    lag.get("price_pct_change_1d", 0),
+                    lag.get("price_pct_change_7d", 0),
+                    roll.get("momentum", 0),
+                    roll.get("volatility_cv", 0),
+                ]
+                p = float(gbr.predict([feat])[0])
+                preds.append(p)
+                history.append(p)
+            return preds
+        except Exception:
+            return self._run_holt(train, steps)
+
+    def _run_prophet(
+        self, train: List[float], steps: int, train_dates: List[datetime] = None
+    ) -> List[float]:
+        if not PROPHET_AVAILABLE or len(train) < 14:
+            return self._run_holt(train, steps)
+        try:
+            if train_dates is None:
+                train_dates = [
+                    datetime.now() - timedelta(days=len(train) - i)
+                    for i in range(len(train))
+                ]
+            df = pd.DataFrame({"ds": train_dates, "y": train})
+            m = Prophet(
+                daily_seasonality=False,
+                weekly_seasonality=len(train) > 30,
+                yearly_seasonality=len(train) > 365,
+                changepoint_prior_scale=0.05,
+            )
+            m.fit(df)
+            future = m.make_future_dataframe(periods=steps)
+            fc = m.predict(future)
+            return [max(1.0, float(v)) for v in fc["yhat"].tail(steps).tolist()]
+        except Exception:
+            return self._run_holt(train, steps)
+
+    # ------------------------------------------------------------------
+    # Fit & weight
+    # ------------------------------------------------------------------
+    def fit_and_weight(
+        self, prices: List[float], dates: List[datetime] = None
+    ) -> None:
+        """Compute RMSE-based model weights via a walk-forward validation split,
+        then fit the fast per-model instances on the full series."""
+        self._trained_prices = list(prices)
+        n = len(prices)
+
+        if n < 10:
+            # Not enough data — assign equal weights
+            self.weights = {k: 1.0 / len(self.MODEL_KEYS) for k in self.MODEL_KEYS}
+            self.holt_model.fit(prices)
+            self.lstm_model.fit(prices)
+            return
+
+        holdout = min(7, max(3, n // 5))
+        train, test = prices[:-holdout], prices[-holdout:]
+        train_dates = dates[:-holdout] if dates else None
+
+        rmse_scores: Dict[str, float] = {}
+        for key in self.MODEL_KEYS:
+            try:
+                if key == "holt":
+                    preds = self._run_holt(train, holdout)
+                elif key == "lstm":
+                    preds = self._run_lstm(train, holdout)
+                elif key == "sarima":
+                    preds = self._run_sarima(train, holdout)
+                elif key == "gbr":
+                    preds = self._run_gbr(train, holdout)
+                elif key == "prophet":
+                    preds = self._run_prophet(train, holdout, train_dates)
+                else:
+                    preds = self._run_holt(train, holdout)
+                rmse_scores[key] = self._rmse(test, preds)
+            except Exception as e:
+                logger.warning(f"EnsembleForecaster {key} validation error: {e}")
+                rmse_scores[key] = 1e6
+
+        # Inverse-RMSE weighting, normalised to sum=1
+        inv   = {k: 1.0 / max(v, 1e-4) for k, v in rmse_scores.items()}
+        total = sum(inv.values())
+        self.weights = {k: v / total for k, v in inv.items()}
+
+        # Fit fast models on full series for forecasting
+        self.holt_model.fit(prices)
+        self.lstm_model.fit(prices)
+
+    # ------------------------------------------------------------------
+    # Forecast
+    # ------------------------------------------------------------------
+    def forecast(
+        self,
+        steps: int,
+        prices: List[float],
+        dates: List[datetime] = None,
+    ) -> Dict[str, Any]:
+        """
+        Generate multi-model ensemble forecast for `steps` days ahead.
+
+        Returns a dict matching the /forecast/multi-model API contract.
+        """
+        base_date = datetime.now()
+
+        # --- collect raw predictions from every model ---
+        model_preds: Dict[str, List[float]] = {}
+        for key in self.MODEL_KEYS:
+            try:
+                if key == "holt":
+                    preds = self.holt_model.forecast(steps)
+                elif key == "lstm":
+                    preds = self.lstm_model.forecast(steps)
+                elif key == "sarima":
+                    preds = self._run_sarima(prices, steps)
+                elif key == "gbr":
+                    preds = self._run_gbr(prices, steps)
+                elif key == "prophet":
+                    preds = self._run_prophet(prices, steps, dates)
+                else:
+                    preds = self._run_holt(prices, steps)
+                model_preds[key] = [max(1.0, p) for p in preds]
+            except Exception as e:
+                logger.warning(f"EnsembleForecaster {key} forecast failed: {e}")
+                fallback_price = prices[-1] if prices else 300.0
+                model_preds[key] = [fallback_price] * steps
+
+        weights = self.weights or {k: 1.0 / len(self.MODEL_KEYS) for k in self.MODEL_KEYS}
+
+        # --- weighted ensemble mean ---
+        ensemble_vals: List[float] = []
+        for i in range(steps):
+            val = sum(weights.get(k, 0.0) * model_preds[k][i] for k in self.MODEL_KEYS)
+            ensemble_vals.append(val)
+
+        # --- confidence intervals: spread of constituent model predictions ---
+        ensemble_out: List[Dict[str, Any]] = []
+        for i in range(steps):
+            day_preds = [model_preds[k][i] for k in self.MODEL_KEYS]
+            spread    = (max(day_preds) - min(day_preds)) / 2.0
+            mid       = ensemble_vals[i]
+            ensemble_out.append({
+                "date":  (base_date + timedelta(days=i + 1)).strftime("%Y-%m-%d"),
+                "price": round(mid, 2),
+                "lower": round(max(1.0, mid - spread * 1.15), 2),
+                "upper": round(mid + spread * 1.15, 2),
+            })
+
+        # --- best model = highest weight ---
+        best_model = max(weights, key=lambda k: weights[k]) if weights else "holt"
+
+        # --- ensemble accuracy proxy: 1 − normalised coefficient of variation ---
+        if ensemble_vals:
+            mu     = sum(ensemble_vals) / len(ensemble_vals)
+            sigma  = math.sqrt(
+                sum((v - mu) ** 2 for v in ensemble_vals) / max(len(ensemble_vals) - 1, 1)
+            )
+            cv     = sigma / mu if mu > 0 else 0.0
+            accuracy = round(max(0.0, min(1.0, 1.0 - cv * 2.0)), 4)
+        else:
+            accuracy = 0.5
+
+        return {
+            "ensemble":        ensemble_out,
+            "models":          {k: [round(p, 2) for p in v] for k, v in model_preds.items()},
+            "modelWeights":    {k: round(v, 4) for k, v in weights.items()},
+            "bestModel":       best_model,
+            "ensembleAccuracy": accuracy,
+        }
+
+
+# ============================================================================
 # MAIN PRICE PREDICTION MODEL
 # ============================================================================
 
@@ -611,6 +1086,15 @@ class RASSPriceModel:
     def __init__(self):
         self.statistical_model = HoltLinearModel(alpha=0.3, beta=0.1)
         self.ml_model = RidgeRegression(alpha=1.0, learning_rate=0.001, iterations=500)
+        self.prophet_model = None
+        self.sarima_model = None
+        self.gbr_model = None
+        self.gbr_trained = False
+        self.xgb_model = None
+        self.xgb_trained = False
+        self.lgb_model = None
+        self.lgb_trained = False
+        self.ensemble_weights: Dict[str, float] = {"baseline": 1.0}
         self.feature_engineer = FeatureEngineer()
         self.trained = False
         self.historical_errors: List[float] = []
@@ -630,11 +1114,32 @@ class RASSPriceModel:
             # Sort by date
             sorted_prices = sorted(historical_prices, key=lambda x: x.date)
             prices = [p.price for p in sorted_prices]
+            dates = [p.date for p in sorted_prices]
             
-            # Fit statistical model
+            # --- Attempt Prophet Training First ---
+            if PROPHET_AVAILABLE and len(prices) >= 14:
+                try:
+                    df = pd.DataFrame({
+                        'ds': dates,
+                        'y': prices
+                    })
+                    # Add regressors if external features exist (simplified for this scope)
+                    self.prophet_model = Prophet(
+                        daily_seasonality=False,
+                        weekly_seasonality=len(prices) > 30,
+                        yearly_seasonality=len(prices) > 365,
+                        changepoint_prior_scale=0.05
+                    )
+                    self.prophet_model.fit(df)
+                    logger.info("Successfully trained Prophet model.")
+                except Exception as e:
+                    logger.warning(f"Prophet training failed: {e}. Falling back to baseline.")
+                    self.prophet_model = None
+            
+            # --- Fallback: Fit statistical model ---
             self.statistical_model.fit(prices)
             
-            # Prepare features for ML model (if enough data)
+            # Prepare features for ML residual correction model (if enough data)
             if len(prices) >= 14:
                 X = []
                 y = []  # Residuals from statistical model
@@ -686,7 +1191,14 @@ class RASSPriceModel:
                 if self.ml_model.trained:
                     predictions = self.ml_model.predict(X)
                     self.historical_errors = [y[i] - predictions[i] for i in range(len(y))]
-            
+
+            # Train additional ensemble components
+            self._train_sarima(prices)
+            self._train_gbr(prices, external_factors)
+            self._train_xgb(prices, external_factors)
+            self._train_lgb(prices, external_factors)
+            self.ensemble_weights = self._compute_ensemble_weights(prices, external_factors)
+
             self.trained = True
             return True
             
@@ -721,19 +1233,72 @@ class RASSPriceModel:
             if not self.trained:
                 self.statistical_model.fit(prices)
         
-        # Generate base forecast
-        base_forecasts = self.statistical_model.forecast(forecast_days)
+        forecasts = []
+        contributions = {}
         
-        # Apply ML correction if available
-        if self.ml_model.trained:
-            features = self._prepare_features(prices, external_factors)
-            corrections = self.ml_model.predict([features] * forecast_days)
-            forecasts = [base_forecasts[i] + corrections[i] for i in range(forecast_days)]
-            contributions = self.ml_model.get_feature_contributions(features)
-        else:
-            forecasts = base_forecasts
-            contributions = {}
+        # --- Run Prophet if available and trained ---
+        if self.prophet_model is not None:
+            try:
+                future = self.prophet_model.make_future_dataframe(periods=forecast_days)
+                forecast_df = self.prophet_model.predict(future)
+                # Extract only the future predictions
+                forecasts = forecast_df['yhat'].tail(forecast_days).tolist()
+                
+                # Estimate basic contributions based on prophet components
+                if 'trend' in forecast_df.columns:
+                    trend_diff = forecast_df['trend'].iloc[-1] - forecast_df['trend'].iloc[-forecast_days-1]
+                    contributions['momentum'] = trend_diff
+                
+                logger.info("Generated predictions using Prophet.")
+            except Exception as e:
+                logger.warning(f"Prophet prediction failed: {e}. Falling back to baseline.")
+                forecasts = []
         
+        # --- Fallback to baseline (+ ML correction) if Prophet failed or is missing ---
+        if not forecasts:
+            # Generate base forecast
+            base_forecasts = self.statistical_model.forecast(forecast_days)
+            
+            # Apply ML correction if available
+            if self.ml_model.trained:
+                features = self._prepare_features(prices, external_factors)
+                corrections = self.ml_model.predict([features] * forecast_days)
+                forecasts = [base_forecasts[i] + corrections[i] for i in range(forecast_days)]
+                contributions = self.ml_model.get_feature_contributions(features)
+            else:
+                forecasts = base_forecasts
+
+        baseline_forecasts = list(forecasts)
+
+        # Ensemble blend with SARIMA / Gradient Boosting if available
+        ensemble_candidates: Dict[str, List[float]] = {"baseline": baseline_forecasts}
+
+        if self.sarima_model is not None:
+            try:
+                sarima_preds = list(self.sarima_model.forecast(steps=forecast_days))
+                if len(sarima_preds) == forecast_days:
+                    ensemble_candidates["sarima"] = sarima_preds
+            except Exception as e:
+                logger.warning(f"SARIMA forecast failed: {e}")
+
+        if self.gbr_trained:
+            gbr_preds = self._gbr_forecast(prices, forecast_days, external_factors)
+            if len(gbr_preds) == forecast_days:
+                ensemble_candidates["gbr"] = gbr_preds
+
+        if self.xgb_trained:
+            xgb_preds = self._xgb_forecast(prices, forecast_days, external_factors)
+            if len(xgb_preds) == forecast_days:
+                ensemble_candidates["xgb"] = xgb_preds
+
+        if self.lgb_trained:
+            lgb_preds = self._lgb_forecast(prices, forecast_days, external_factors)
+            if len(lgb_preds) == forecast_days:
+                ensemble_candidates["lgb"] = lgb_preds
+
+        if len(ensemble_candidates) > 1:
+            forecasts = self._blend_forecasts(ensemble_candidates, self.ensemble_weights)
+
         # Ensure no negative prices
         forecasts = [max(10, f) for f in forecasts]
         
@@ -789,6 +1354,305 @@ class RASSPriceModel:
             explanation=explanation,
             top_factors=top_factors
         )
+
+    def _train_sarima(self, prices: List[float]) -> None:
+        if not SARIMA_AVAILABLE or len(prices) < 14:
+            self.sarima_model = None
+            return
+        try:
+            model = SARIMAX(
+                prices,
+                order=(1, 1, 1),
+                seasonal_order=(0, 1, 1, 7),
+                enforce_stationarity=False,
+                enforce_invertibility=False
+            )
+            self.sarima_model = model.fit(disp=False)
+        except Exception as e:
+            logger.warning(f"SARIMA training failed: {e}")
+            self.sarima_model = None
+
+    def _train_gbr(self, prices: List[float], external_factors: ExternalFactors = None) -> None:
+        if not SKLEARN_AVAILABLE or len(prices) < 14:
+            self.gbr_model = None
+            self.gbr_trained = False
+            return
+        try:
+            X: List[List[float]] = []
+            y: List[float] = []
+            for i in range(7, len(prices)):
+                X.append(self._prepare_features(prices[:i], external_factors))
+                y.append(prices[i])
+            if len(X) < 5:
+                self.gbr_model = None
+                self.gbr_trained = False
+                return
+            model = GradientBoostingRegressor(
+                random_state=42,
+                n_estimators=200,
+                learning_rate=0.05,
+                max_depth=3
+            )
+            model.fit(X, y)
+            self.gbr_model = model
+            self.gbr_trained = True
+        except Exception as e:
+            logger.warning(f"Gradient boosting training failed: {e}")
+            self.gbr_model = None
+            self.gbr_trained = False
+
+    def _gbr_forecast(self, prices: List[float], forecast_days: int, external_factors: ExternalFactors = None) -> List[float]:
+        if not self.gbr_trained or self.gbr_model is None:
+            return []
+        history = list(prices)
+        preds: List[float] = []
+        for _ in range(forecast_days):
+            features = self._prepare_features(history, external_factors)
+            pred = float(self.gbr_model.predict([features])[0])
+            preds.append(pred)
+            history.append(pred)
+        return preds
+
+    def _train_xgb(self, prices: List[float], external_factors: ExternalFactors = None) -> None:
+        if not XGBOOST_AVAILABLE or xgb is None or len(prices) < 14:
+            self.xgb_model = None
+            self.xgb_trained = False
+            return
+        try:
+            X: List[List[float]] = []
+            y: List[float] = []
+            for i in range(7, len(prices)):
+                X.append(self._prepare_features(prices[:i], external_factors))
+                y.append(prices[i])
+            if len(X) < 5:
+                self.xgb_model = None
+                self.xgb_trained = False
+                return
+            model = xgb.XGBRegressor(
+                random_state=42,
+                n_estimators=200,
+                learning_rate=0.05,
+                max_depth=4,
+                subsample=0.8,
+                colsample_bytree=0.8,
+                verbosity=0
+            )
+            model.fit(X, y)
+            self.xgb_model = model
+            self.xgb_trained = True
+        except Exception as e:
+            logger.warning(f"XGBoost training failed: {e}")
+            self.xgb_model = None
+            self.xgb_trained = False
+
+    def _xgb_forecast(self, prices: List[float], forecast_days: int, external_factors: ExternalFactors = None) -> List[float]:
+        if not self.xgb_trained or self.xgb_model is None:
+            return []
+        history = list(prices)
+        preds: List[float] = []
+        for _ in range(forecast_days):
+            features = self._prepare_features(history, external_factors)
+            pred = float(self.xgb_model.predict([features])[0])
+            preds.append(pred)
+            history.append(pred)
+        return preds
+
+    def _train_lgb(self, prices: List[float], external_factors: ExternalFactors = None) -> None:
+        if not LIGHTGBM_AVAILABLE or lgb is None or len(prices) < 14:
+            self.lgb_model = None
+            self.lgb_trained = False
+            return
+        try:
+            X: List[List[float]] = []
+            y: List[float] = []
+            for i in range(7, len(prices)):
+                X.append(self._prepare_features(prices[:i], external_factors))
+                y.append(prices[i])
+            if len(X) < 5:
+                self.lgb_model = None
+                self.lgb_trained = False
+                return
+            model = lgb.LGBMRegressor(
+                random_state=42,
+                n_estimators=200,
+                learning_rate=0.05,
+                max_depth=4,
+                subsample=0.8,
+                colsample_bytree=0.8,
+                verbose=-1
+            )
+            model.fit(X, y)
+            self.lgb_model = model
+            self.lgb_trained = True
+        except Exception as e:
+            logger.warning(f"LightGBM training failed: {e}")
+            self.lgb_model = None
+            self.lgb_trained = False
+
+    def _lgb_forecast(self, prices: List[float], forecast_days: int, external_factors: ExternalFactors = None) -> List[float]:
+        if not self.lgb_trained or self.lgb_model is None:
+            return []
+        history = list(prices)
+        preds: List[float] = []
+        for _ in range(forecast_days):
+            features = self._prepare_features(history, external_factors)
+            pred = float(self.lgb_model.predict([features])[0])
+            preds.append(pred)
+            history.append(pred)
+        return preds
+
+    def _mape(self, actual: List[float], predicted: List[float]) -> float:
+        if not actual or not predicted:
+            return 1.0
+        errors = []
+        for a, p in zip(actual, predicted):
+            if a == 0:
+                errors.append(abs(a - p))
+            else:
+                errors.append(abs((a - p) / a))
+        return mean(errors) if errors else 1.0
+
+    def _compute_ensemble_weights(self, prices: List[float], external_factors: ExternalFactors = None) -> Dict[str, float]:
+        if len(prices) < 20:
+            return {"baseline": 1.0}
+
+        holdout = min(7, max(3, len(prices) // 4))
+        train_prices = prices[:-holdout]
+        test_prices = prices[-holdout:]
+
+        errors: Dict[str, float] = {}
+
+        # Baseline Holt-linear
+        base_model = HoltLinearModel(alpha=0.3, beta=0.1)
+        base_model.fit(train_prices)
+        base_preds = base_model.forecast(holdout)
+        errors["baseline"] = self._mape(test_prices, base_preds)
+
+        # SARIMA
+        if SARIMA_AVAILABLE and len(train_prices) >= 14:
+            try:
+                sarima = SARIMAX(
+                    train_prices,
+                    order=(1, 1, 1),
+                    seasonal_order=(0, 1, 1, 7),
+                    enforce_stationarity=False,
+                    enforce_invertibility=False
+                ).fit(disp=False)
+                sarima_preds = list(sarima.forecast(steps=holdout))
+                errors["sarima"] = self._mape(test_prices, sarima_preds)
+            except Exception as e:
+                logger.warning(f"SARIMA validation failed: {e}")
+
+        # Gradient Boosting
+        if SKLEARN_AVAILABLE and len(train_prices) >= 14:
+            try:
+                X: List[List[float]] = []
+                y: List[float] = []
+                for i in range(7, len(train_prices)):
+                    X.append(self._prepare_features(train_prices[:i], external_factors))
+                    y.append(train_prices[i])
+                if len(X) >= 5:
+                    gbr = GradientBoostingRegressor(
+                        random_state=42,
+                        n_estimators=200,
+                        learning_rate=0.05,
+                        max_depth=3
+                    )
+                    gbr.fit(X, y)
+                    history = list(train_prices)
+                    gbr_preds: List[float] = []
+                    for _ in range(holdout):
+                        feat = self._prepare_features(history, external_factors)
+                        pred = float(gbr.predict([feat])[0])
+                        gbr_preds.append(pred)
+                        history.append(pred)
+                    errors["gbr"] = self._mape(test_prices, gbr_preds)
+            except Exception as e:
+                logger.warning(f"Gradient boosting validation failed: {e}")
+
+        # XGBoost
+        if XGBOOST_AVAILABLE and xgb is not None and len(train_prices) >= 14:
+            try:
+                X_xgb: List[List[float]] = []
+                y_xgb: List[float] = []
+                for i in range(7, len(train_prices)):
+                    X_xgb.append(self._prepare_features(train_prices[:i], external_factors))
+                    y_xgb.append(train_prices[i])
+                if len(X_xgb) >= 5:
+                    xgb_model = xgb.XGBRegressor(
+                        random_state=42, n_estimators=200, learning_rate=0.05,
+                        max_depth=4, subsample=0.8, colsample_bytree=0.8, verbosity=0
+                    )
+                    xgb_model.fit(X_xgb, y_xgb)
+                    history = list(train_prices)
+                    xgb_preds: List[float] = []
+                    for _ in range(holdout):
+                        feat = self._prepare_features(history, external_factors)
+                        pred = float(xgb_model.predict([feat])[0])
+                        xgb_preds.append(pred)
+                        history.append(pred)
+                    errors["xgb"] = self._mape(test_prices, xgb_preds)
+            except Exception as e:
+                logger.warning(f"XGBoost validation failed: {e}")
+
+        # LightGBM
+        if LIGHTGBM_AVAILABLE and lgb is not None and len(train_prices) >= 14:
+            try:
+                X_lgb: List[List[float]] = []
+                y_lgb: List[float] = []
+                for i in range(7, len(train_prices)):
+                    X_lgb.append(self._prepare_features(train_prices[:i], external_factors))
+                    y_lgb.append(train_prices[i])
+                if len(X_lgb) >= 5:
+                    lgb_model = lgb.LGBMRegressor(
+                        random_state=42, n_estimators=200, learning_rate=0.05,
+                        max_depth=4, subsample=0.8, colsample_bytree=0.8, verbose=-1
+                    )
+                    lgb_model.fit(X_lgb, y_lgb)
+                    history = list(train_prices)
+                    lgb_preds: List[float] = []
+                    for _ in range(holdout):
+                        feat = self._prepare_features(history, external_factors)
+                        pred = float(lgb_model.predict([feat])[0])
+                        lgb_preds.append(pred)
+                        history.append(pred)
+                    errors["lgb"] = self._mape(test_prices, lgb_preds)
+            except Exception as e:
+                logger.warning(f"LightGBM validation failed: {e}")
+
+        weights: Dict[str, float] = {}
+        total = 0.0
+        for key, err in errors.items():
+            w = 1.0 / max(err, 1e-4)
+            weights[key] = w
+            total += w
+
+        if total <= 0:
+            return {"baseline": 1.0}
+
+        return {k: v / total for k, v in weights.items()}
+
+    def _blend_forecasts(self, candidates: Dict[str, List[float]], weights: Dict[str, float]) -> List[float]:
+        if not candidates:
+            return []
+        length = len(next(iter(candidates.values())))
+        weight_total = 0.0
+        effective_weights: Dict[str, float] = {}
+        for key in candidates.keys():
+            w = weights.get(key, 0.0)
+            if w <= 0:
+                w = 1.0
+            effective_weights[key] = w
+            weight_total += w
+        if weight_total == 0:
+            weight_total = 1.0
+        for key in effective_weights:
+            effective_weights[key] /= weight_total
+
+        blended: List[float] = []
+        for i in range(length):
+            blended.append(sum(candidates[k][i] * effective_weights[k] for k in candidates))
+        return blended
     
     def _prepare_features(
         self,

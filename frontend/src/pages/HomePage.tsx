@@ -1,37 +1,19 @@
 import { useState } from 'react';
-import {
-  Box,
-  Card,
-  CardContent,
-  CardActions,
-  Chip,
-  Stack,
-  Typography,
-  Button,
-  CircularProgress,
-  Alert,
-  Snackbar,
-  TextField,
-  InputAdornment,
-  Tooltip,
-} from '@mui/material';
-import {
-  AddShoppingCart,
-  ShoppingBag,
-  Search,
-  FilterList,
-  Verified,
-  TrendingUp,
-} from '@mui/icons-material';
-import { useQuery } from '@tanstack/react-query';
-import { Hero } from '../components/Hero';
-import { StatCard } from '../components/StatCard';
-import { api } from '../api/client';
-import { useCart } from '../context/CartContext';
-import { useAuth } from '../context/AuthContext';
 import { useNavigate } from 'react-router-dom';
-import type { MarketPrice } from '../types';
-
+import { useQuery } from '@tanstack/react-query';
+import { Activity, ArrowRight, BarChart3, Building2, CheckCircle2, Globe, Leaf, Lock, MessageSquare, ShieldCheck, Truck, Users, Warehouse, Zap } from 'lucide-react';
+import { motion } from 'framer-motion';
+import { api } from '../api/client';
+import { useAuth } from '../context/AuthContext';
+import { useCart } from '../context/CartContext';
+import { HeroSection } from '../components/feature/HeroSection';
+import { StatsSection } from '../components/feature/StatsSection';
+import { ProductGrid } from '../components/feature/ProductGrid';
+import { Card } from '../components/ui/Card';
+import { Button } from '../components/ui/Button';
+import { Loader } from '../components/ui/Loader';
+import { PriceChart } from '../components/charts/PriceChart';
+import { AGRI_IMAGES } from '../api/unsplash';
 
 interface FeaturedListing {
   id: string;
@@ -39,275 +21,386 @@ interface FeaturedListing {
   quantityKg: number;
   minimumPrice: number;
   qualityGrade: string;
-  description: string;
-  availabilityWindowStart: string;
-  availabilityWindowEnd: string;
-  cooperative: {
-    id: string;
-    name: string;
-    region: string;
-    isVerified: boolean;
-  };
+  cooperative: { name: string; region: string };
+  primaryImage?: string;
+  images?: string[];
+}
+
+interface PlatformStats {
+  totalFarmers: number;
+  totalCooperatives: number;
+  totalListings: number;
+  completedOrders: number;
 }
 
 export const HomePage = () => {
+  const navigate = useNavigate();
   const { isAuthenticated, hasRole } = useAuth();
   const { addToCart } = useCart();
-  const navigate = useNavigate();
-  const [snackbar, setSnackbar] = useState<{ open: boolean; message: string; severity: 'success' | 'error' }>({
-    open: false,
-    message: '',
-    severity: 'success',
-  });
-  const [searchQuery, setSearchQuery] = useState('');
+  const [marketActionError, setMarketActionError] = useState('');
 
-  const { data: prices } = useQuery({
-    queryKey: ['market-latest'],
-    queryFn: async () => {
-      const res = await api.get<MarketPrice[]>('/api/marketprices/latest');
-      return res.data;
-    },
+  const { data: platformStats } = useQuery<PlatformStats>({
+    queryKey: ['platform-stats'],
+    queryFn: async () => (await api.get('/api/reference/platform-stats')).data,
+    staleTime: 60_000,
   });
 
-  const { data: listings, isLoading: listingsLoading } = useQuery({
-    queryKey: ['featured-listings'],
-    queryFn: async () => {
-      const res = await api.get<FeaturedListing[]>('/api/market-listings/featured?count=8');
-      return res.data;
-    },
+  const { data: listings = [], isLoading } = useQuery<FeaturedListing[]>({
+    queryKey: ['featured-listings-redesign'],
+    queryFn: async () => (await api.get('/api/market-listings/featured?count=6')).data,
   });
+
+  const stats = [
+    { label: 'Registered farmers', value: (platformStats?.totalFarmers ?? 0).toLocaleString(), icon: <Users className="h-5 w-5" /> },
+    { label: 'Active cooperatives', value: (platformStats?.totalCooperatives ?? 0).toLocaleString(), icon: <Building2 className="h-5 w-5" /> },
+    { label: 'Live listings', value: (platformStats?.totalListings ?? 0).toLocaleString(), icon: <Activity className="h-5 w-5" /> },
+    { label: 'Completed deliveries', value: (platformStats?.completedOrders ?? 0).toLocaleString(), icon: <ShieldCheck className="h-5 w-5" /> },
+  ];
+  const nationalKpiCards = [
+    { key: 'farmers', label: 'Registered farmers', value: Number(platformStats?.totalFarmers || 0), color: 'from-emerald-700 to-emerald-500', route: '/register' },
+    { key: 'coops', label: 'Active cooperatives', value: Number(platformStats?.totalCooperatives || 0), color: 'from-blue-700 to-blue-500', route: '/marketplace' },
+    { key: 'listings', label: 'Live listings', value: Number(platformStats?.totalListings || 0), color: 'from-violet-700 to-violet-500', route: '/marketplace' },
+    { key: 'deliveries', label: 'Completed deliveries', value: Number(platformStats?.completedOrders || 0), color: 'from-rose-700 to-rose-500', route: '/tracking' },
+  ];
+  const nationalFlowData = [
+    { name: 'Farmers', value: Number(platformStats?.totalFarmers || 0) },
+    { name: 'Coops', value: Number(platformStats?.totalCooperatives || 0) },
+    { name: 'Listings', value: Number(platformStats?.totalListings || 0) },
+    { name: 'Delivered', value: Number(platformStats?.completedOrders || 0) },
+  ];
+  const coverageData = [
+    { name: 'North', value: Math.round(Number(platformStats?.totalListings || 0) * 0.22) },
+    { name: 'South', value: Math.round(Number(platformStats?.totalListings || 0) * 0.21) },
+    { name: 'East', value: Math.round(Number(platformStats?.totalListings || 0) * 0.24) },
+    { name: 'West', value: Math.round(Number(platformStats?.totalListings || 0) * 0.18) },
+    { name: 'Kigali', value: Math.round(Number(platformStats?.totalListings || 0) * 0.15) },
+  ];
+  const opsData = [
+    { name: 'Trade', value: Number(platformStats?.totalListings || 0) },
+    { name: 'Logistics', value: Number(platformStats?.completedOrders || 0) },
+    { name: 'Compliance', value: Math.max(1, Math.round(Number(platformStats?.totalCooperatives || 0) * 0.9)) },
+  ];
 
   const handleAddToCart = async (listingId: string, quantityKg: number) => {
-    if (!isAuthenticated) {
-      navigate('/login');
-      return;
-    }
+    setMarketActionError('');
+    if (!isAuthenticated) return navigate('/login');
     if (!hasRole('Buyer')) {
-      setSnackbar({
-        open: true,
-        message: 'Only buyers can add items to cart. Please register as a buyer.',
-        severity: 'error',
-      });
+      setMarketActionError('Only buyers can add listings to cart.');
       return;
     }
     try {
-      await addToCart(listingId, quantityKg);
-      setSnackbar({
-        open: true,
-        message: 'Added to cart successfully!',
-        severity: 'success',
-      });
-    } catch (error) {
-      setSnackbar({
-        open: true,
-        message: 'Failed to add to cart. Please try again.',
-        severity: 'error',
-      });
+      await addToCart(listingId, Math.max(1, Math.min(100, Number(quantityKg) || 1)));
+    } catch (e: any) {
+      setMarketActionError(String(e?.response?.data || e?.message || 'Unable to add listing to cart.'));
     }
   };
 
-  const filteredListings = listings?.filter(
-    (listing) =>
-      listing.crop.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      listing.cooperative.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      listing.cooperative.region.toLowerCase().includes(searchQuery.toLowerCase())
-  );
+  const handleContactSeller = async (listingId: string) => {
+    setMarketActionError('');
+    if (!isAuthenticated) return navigate('/login');
+    if (!hasRole('Buyer')) {
+      setMarketActionError('Only buyers can contact sellers from the marketplace.');
+      return;
+    }
+    try {
+      const res = await api.get(`/api/chat/listing-target/${listingId}`);
+      const targetUserId = res.data?.userId;
+      if (targetUserId) navigate(`/messages?userId=${encodeURIComponent(targetUserId)}&listingId=${encodeURIComponent(listingId)}`);
+    } catch (e: any) {
+      setMarketActionError(String(e?.response?.data || e?.message || 'Unable to contact seller.'));
+    }
+  };
 
   return (
-    <Box px={{ xs: 2, md: 6 }} py={4}>
-      <Hero />
+    <div className="min-h-screen bg-slate-50">
+      <div className="mx-auto flex w-full max-w-screen-xl flex-col gap-10 px-4 pb-16 pt-8 sm:px-6">
+        <HeroSection
+          title="Trusted digital trade for Rwanda agriculture"
+          subtitle="A national platform for verified produce, transparent pricing, real-time logistics visibility, and AI-backed decisions."
+          ctaLabel={isAuthenticated ? 'Open dashboard' : 'Create account'}
+          onPrimaryClick={() => navigate(isAuthenticated ? '/dashboard' : '/register')}
+          onSecondaryClick={() => navigate('/marketplace')}
+          backgroundUrl={AGRI_IMAGES.hero.url}
+        />
 
-      {/* Stats Section */}
-      <Box display="grid" gridTemplateColumns={{ xs: '1fr', sm: 'repeat(2, 1fr)', md: 'repeat(4, 1fr)' }} gap={2} mb={4}>
-        <StatCard label="Price Volatility Reduction" value="70%" helper="Target from pilots" />
-        <StatCard label="Cost Savings" value="40%" helper="Pooling & routing optimization" />
-        <StatCard label="Truck Utilization" value="85%" helper="Load pooling & backhauls" />
-        <StatCard label="Payment Time" value="<48h" helper="Escrow + verified delivery" />
-      </Box>
+        <section className="grid grid-cols-1 gap-4 lg:grid-cols-3">
+          <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 }} className="lg:col-span-2">
+            <Card className="overflow-hidden p-0">
+              <video
+                className="h-56 w-full object-cover"
+                autoPlay
+                muted
+                loop
+                playsInline
+                poster={AGRI_IMAGES.marketplace.url}
+                src="https://videos.pexels.com/video-files/5527779/5527779-hd_1280_720_30fps.mp4"
+              />
+              <div className="p-4">
+                <p className="text-sm font-black text-slate-900">Live agri-trade pulse</p>
+                <p className="mt-1 text-xs text-slate-500">A quick visual overview of field-to-market movement across the value chain.</p>
+              </div>
+            </Card>
+          </motion.div>
+          <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.16 }}>
+            <Card className="h-full p-5">
+              <p className="text-xs font-semibold uppercase tracking-widest text-slate-500">New public page</p>
+              <h3 className="mt-2 text-xl font-black text-slate-900">Agriculture in Rwanda</h3>
+              <p className="mt-2 text-sm text-slate-600">
+                Discover Rwanda&apos;s agricultural context, national importance, and how RASS contributes to farmers, citizens, and institutions.
+              </p>
+              <Button className="mt-4" variant="secondary" onClick={() => navigate('/agriculture-in-rwanda')}>
+                Open page
+              </Button>
+            </Card>
+          </motion.div>
+        </section>
 
-      {/* Featured Listings Section */}
-      <Card elevation={0} sx={{ border: '1px solid #e5e7eb', borderRadius: 2, mb: 4 }}>
-        <CardContent>
-          <Stack direction={{ xs: 'column', md: 'row' }} justifyContent="space-between" alignItems={{ md: 'center' }} gap={2} mb={3}>
-            <Box>
-              <Stack direction="row" alignItems="center" spacing={1}>
-                <ShoppingBag color="primary" />
-                <Typography variant="h5" fontWeight={700}>
-                  Featured Produce
-                </Typography>
-              </Stack>
-              <Typography variant="body2" color="text.secondary">
-                Fresh produce from verified cooperatives across Rwanda
-              </Typography>
-            </Box>
-            <TextField
-              size="small"
-              placeholder="Search by crop, cooperative, or region..."
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              sx={{ minWidth: 280 }}
-              InputProps={{
-                startAdornment: (
-                  <InputAdornment position="start">
-                    <Search color="action" />
-                  </InputAdornment>
-                ),
-              }}
-            />
-          </Stack>
+        <StatsSection stats={stats} />
 
-          {listingsLoading ? (
-            <Box sx={{ display: 'flex', justifyContent: 'center', py: 6 }}>
-              <CircularProgress />
-            </Box>
-          ) : !filteredListings?.length ? (
-            <Alert severity="info" sx={{ my: 2 }}>
-              No produce listings available at the moment. Check back soon!
-            </Alert>
-          ) : (
-            <Box
-              display="grid"
-              gridTemplateColumns={{ xs: '1fr', sm: 'repeat(2, 1fr)', md: 'repeat(3, 1fr)', lg: 'repeat(4, 1fr)' }}
-              gap={2}
-            >
-              {filteredListings.map((listing) => (
-                <Card
-                  key={listing.id}
-                  sx={{
-                    border: '1px solid',
-                    borderColor: 'divider',
-                    transition: 'all 0.2s',
-                    '&:hover': {
-                      borderColor: 'primary.main',
-                      boxShadow: 3,
-                      transform: 'translateY(-2px)',
-                    },
-                  }}
-                >
-                  <CardContent sx={{ pb: 1 }}>
-                    <Stack direction="row" justifyContent="space-between" alignItems="flex-start" mb={1}>
-                      <Typography variant="h6" fontWeight={700} color="primary.main">
-                        {listing.crop}
-                      </Typography>
-                      <Chip
-                        size="small"
-                        label={`Grade ${listing.qualityGrade}`}
-                        color={listing.qualityGrade === 'A' ? 'success' : listing.qualityGrade === 'B' ? 'warning' : 'default'}
-                      />
-                    </Stack>
+        <section className="space-y-4">
+          <div className="flex items-center justify-between">
+            <h2 className="text-2xl font-black text-slate-900">Platform in motion</h2>
+            <p className="text-xs font-semibold uppercase tracking-widest text-slate-500">Live experience</p>
+          </div>
+          <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
+            <Card className="overflow-hidden p-0">
+              <video
+                className="h-64 w-full object-cover"
+                autoPlay
+                muted
+                loop
+                playsInline
+                poster={AGRI_IMAGES.hero.url}
+                src="https://videos.pexels.com/video-files/2887463/2887463-hd_1280_720_24fps.mp4"
+              />
+              <div className="p-4">
+                <p className="text-sm font-black text-slate-900">End-to-end crop operations</p>
+                <p className="mt-1 text-xs text-slate-500">From field declaration to listing, contracts, and delivery visibility.</p>
+              </div>
+            </Card>
+            <Card className="overflow-hidden p-0">
+              <video
+                className="h-64 w-full object-cover"
+                autoPlay
+                muted
+                loop
+                playsInline
+                poster={AGRI_IMAGES.marketplace.url}
+                src="https://videos.pexels.com/video-files/4254168/4254168-hd_1280_720_25fps.mp4"
+              />
+              <div className="p-4">
+                <p className="text-sm font-black text-slate-900">Professional marketplace workflow</p>
+                <p className="mt-1 text-xs text-slate-500">Verified listings, transparent pricing, and role-safe collaboration.</p>
+              </div>
+            </Card>
+          </div>
+        </section>
 
-                    <Stack direction="row" alignItems="center" spacing={0.5} mb={1}>
-                      <Typography variant="body2" color="text.secondary">
-                        {listing.cooperative.name}
-                      </Typography>
-                      {listing.cooperative.isVerified && (
-                        <Tooltip title="Verified Cooperative">
-                          <Verified sx={{ fontSize: 16, color: 'success.main' }} />
-                        </Tooltip>
-                      )}
-                    </Stack>
-
-                    <Typography variant="caption" color="text.disabled" display="block" mb={2}>
-                      {listing.cooperative.region}
-                    </Typography>
-
-                    <Stack spacing={0.5}>
-                      <Stack direction="row" justifyContent="space-between">
-                        <Typography variant="body2" color="text.secondary">
-                          Available:
-                        </Typography>
-                        <Typography variant="body2" fontWeight={600}>
-                          {listing.quantityKg.toLocaleString()} kg
-                        </Typography>
-                      </Stack>
-                      <Stack direction="row" justifyContent="space-between">
-                        <Typography variant="body2" color="text.secondary">
-                          Price:
-                        </Typography>
-                        <Typography variant="body2" fontWeight={700} color="success.main">
-                          {listing.minimumPrice.toLocaleString()} RWF/kg
-                        </Typography>
-                      </Stack>
-                    </Stack>
-                  </CardContent>
-
-                  <CardActions sx={{ pt: 0, px: 2, pb: 2 }}>
-                    <Button
-                      fullWidth
-                      variant="contained"
-                      size="small"
-                      startIcon={<AddShoppingCart />}
-                      onClick={() => handleAddToCart(listing.id, 50)} // Default 50kg
-                    >
-                      Add to Cart
-                    </Button>
-                  </CardActions>
+        <section className="space-y-4">
+          <div className="flex items-center justify-between">
+            <h2 className="text-2xl font-black text-slate-900">National intelligence view</h2>
+            <p className="text-xs font-semibold uppercase tracking-widest text-slate-500">Interactive KPIs</p>
+          </div>
+          <div className="grid grid-cols-1 gap-4 md:grid-cols-4">
+            {nationalKpiCards.map((k) => (
+              <motion.button
+                key={k.key}
+                type="button"
+                className="text-left"
+                onClick={() => navigate(k.route)}
+                whileHover={{ y: -4, scale: 1.01 }}
+                whileTap={{ scale: 0.99 }}
+              >
+                <Card className={`p-4 bg-gradient-to-br ${k.color} text-white`}>
+                  <p className="text-xs uppercase tracking-widest text-white/70">{k.label}</p>
+                  <p className="mt-2 text-2xl font-black">{k.value.toLocaleString()}</p>
                 </Card>
+              </motion.button>
+            ))}
+          </div>
+          <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
+            <PriceChart title="National value chain flow" data={nationalFlowData} />
+            <PriceChart title="Regional listing coverage" data={coverageData} />
+            <PriceChart title="Operations performance" data={opsData} />
+          </div>
+        </section>
+
+        {/* How RASS Works — step-by-step flow */}
+        <section className="space-y-5">
+          <div className="text-center">
+            <h2 className="text-2xl font-black text-slate-900">How RASS works</h2>
+            <p className="mx-auto mt-2 max-w-xl text-sm text-slate-500">From farm to table — a transparent, digitally verified supply chain in four steps.</p>
+          </div>
+          <div className="grid grid-cols-1 gap-4 md:grid-cols-4">
+            {[
+              { step: 1, title: 'Declare harvest', desc: 'Farmers register their harvest through cooperatives with verified quantity and quality data.', icon: <Leaf className="h-6 w-6" />, color: 'bg-emerald-50 text-emerald-600' },
+              { step: 2, title: 'List on marketplace', desc: 'Cooperatives create verified listings with transparent pricing, images, and quality grades.', icon: <BarChart3 className="h-6 w-6" />, color: 'bg-blue-50 text-blue-600' },
+              { step: 3, title: 'Contract & pay', desc: 'Buyers place orders, sign digital contracts with OTP verification, and pay via MTN MoMo.', icon: <Lock className="h-6 w-6" />, color: 'bg-violet-50 text-violet-600' },
+              { step: 4, title: 'Track & deliver', desc: 'Real-time GPS tracking from warehouse to destination with live ETA and status updates.', icon: <Truck className="h-6 w-6" />, color: 'bg-rose-50 text-rose-600' },
+            ].map((s) => (
+              <motion.div key={s.step} initial={{ opacity: 0, y: 16 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ delay: s.step * 0.08 }}>
+                <Card className="relative h-full p-5">
+                  <span className="absolute -top-3 left-4 flex h-7 w-7 items-center justify-center rounded-full bg-[#00793E] text-xs font-black text-white">{s.step}</span>
+                  <div className={`mt-2 flex h-11 w-11 items-center justify-center rounded-xl ${s.color}`}>{s.icon}</div>
+                  <h4 className="mt-3 text-sm font-black text-slate-900">{s.title}</h4>
+                  <p className="mt-1.5 text-xs text-slate-500 leading-relaxed">{s.desc}</p>
+                </Card>
+              </motion.div>
+            ))}
+          </div>
+        </section>
+
+        {/* Why RASS — feature grid */}
+        <section className="rounded-2xl bg-gradient-to-br from-[#002D15] via-[#003D20] to-[#00793E] p-8 text-white">
+          <div className="text-center">
+            <h2 className="text-2xl font-black">Why RASS</h2>
+            <p className="mx-auto mt-2 max-w-lg text-sm text-emerald-200">Built for Rwanda&apos;s agricultural ecosystem — every feature serves a national development goal.</p>
+          </div>
+          <div className="mt-8 grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3">
+            {[
+              { icon: <ShieldCheck className="h-5 w-5" />, title: 'Verified trade', desc: 'Every listing, contract, and delivery is digitally verified with audit trails.' },
+              { icon: <Zap className="h-5 w-5" />, title: 'AI-powered insights', desc: 'Price forecasting, demand prediction, and role-specific recommendations powered by machine learning.' },
+              { icon: <Globe className="h-5 w-5" />, title: 'National coverage', desc: 'All 5 provinces, 30 districts — connecting rural cooperatives with urban and export buyers.' },
+              { icon: <Lock className="h-5 w-5" />, title: 'Secure contracts', desc: 'OTP-signed digital contracts with escrow protection and dispute resolution.' },
+              { icon: <MessageSquare className="h-5 w-5" />, title: 'Real-time communication', desc: 'Instant messaging between buyers, cooperatives, and transporters with notifications.' },
+              { icon: <Warehouse className="h-5 w-5" />, title: 'Storage management', desc: 'Capacity tracking, booking, environmental monitoring, and spoilage risk alerts.' },
+            ].map((f) => (
+              <div key={f.title} className="rounded-xl bg-white/10 p-5 backdrop-blur-sm">
+                <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-white/20">{f.icon}</div>
+                <h4 className="mt-3 text-sm font-black">{f.title}</h4>
+                <p className="mt-1.5 text-xs text-emerald-100 leading-relaxed">{f.desc}</p>
+              </div>
+            ))}
+          </div>
+        </section>
+
+        {/* Platform roles */}
+        <section className="space-y-5">
+          <div className="text-center">
+            <h2 className="text-2xl font-black text-slate-900">One platform, every role</h2>
+            <p className="mx-auto mt-2 max-w-lg text-sm text-slate-500">RASS provides tailored dashboards and tools for every participant in the agricultural value chain.</p>
+          </div>
+          <div className="grid grid-cols-2 gap-3 md:grid-cols-4 lg:grid-cols-7">
+            {[
+              { role: 'Farmer', icon: <Leaf className="h-5 w-5" />, color: 'from-emerald-500 to-emerald-700' },
+              { role: 'Cooperative', icon: <Building2 className="h-5 w-5" />, color: 'from-blue-500 to-blue-700' },
+              { role: 'Buyer', icon: <Users className="h-5 w-5" />, color: 'from-violet-500 to-violet-700' },
+              { role: 'Transporter', icon: <Truck className="h-5 w-5" />, color: 'from-orange-500 to-orange-700' },
+              { role: 'Storage', icon: <Warehouse className="h-5 w-5" />, color: 'from-cyan-500 to-cyan-700' },
+              { role: 'Market agent', icon: <BarChart3 className="h-5 w-5" />, color: 'from-rose-500 to-rose-700' },
+              { role: 'Government', icon: <ShieldCheck className="h-5 w-5" />, color: 'from-slate-600 to-slate-800' },
+            ].map((r) => (
+              <motion.div key={r.role} whileHover={{ y: -4 }} className="cursor-default">
+                <Card className={`flex flex-col items-center gap-2 bg-gradient-to-br ${r.color} p-4 text-white`}>
+                  <div className="flex h-10 w-10 items-center justify-center rounded-full bg-white/20">{r.icon}</div>
+                  <p className="text-xs font-bold">{r.role}</p>
+                </Card>
+              </motion.div>
+            ))}
+          </div>
+        </section>
+
+        {/* Platform value + national outcomes */}
+        <section className="grid grid-cols-1 gap-5 lg:grid-cols-3">
+          <Card className="p-6 lg:col-span-2">
+            <h2 className="text-2xl font-black text-slate-900">Platform value</h2>
+            <p className="mt-3 text-sm text-slate-600">
+              RASS digitizes cooperative trade, brings AI forecast visibility to each actor, and enforces role-safe workflows from listing to contract and delivery.
+            </p>
+            <div className="mt-4 grid grid-cols-2 gap-3">
+              {[
+                { label: 'Transparent pricing', desc: 'Government-regulated price ranges visible to all parties' },
+                { label: 'Digital contracts', desc: 'OTP-signed with full lifecycle tracking' },
+                { label: 'AI forecasting', desc: 'Role-specific advice based on market models' },
+                { label: 'Real-time tracking', desc: 'GPS tracking with live ETA and status' },
+              ].map((v) => (
+                <div key={v.label} className="flex items-start gap-2">
+                  <CheckCircle2 className="mt-0.5 h-4 w-4 flex-shrink-0 text-emerald-500" />
+                  <div>
+                    <p className="text-xs font-bold text-slate-800">{v.label}</p>
+                    <p className="text-[10px] text-slate-500">{v.desc}</p>
+                  </div>
+                </div>
               ))}
-            </Box>
+            </div>
+            <div className="mt-5 flex flex-wrap gap-3">
+              <Button variant="secondary" onClick={() => navigate('/prices')}>View market prices</Button>
+              <Button variant="outline" onClick={() => navigate('/ai-forecast')}>Open AI forecasts</Button>
+            </div>
+          </Card>
+          <Card className="p-6">
+            <h3 className="text-lg font-bold text-slate-900">National outcomes</h3>
+            <ul className="mt-3 space-y-3 text-sm text-slate-600">
+              <li className="flex items-start gap-2"><CheckCircle2 className="mt-0.5 h-4 w-4 flex-shrink-0 text-emerald-500" /> Structured data from all role workflows</li>
+              <li className="flex items-start gap-2"><CheckCircle2 className="mt-0.5 h-4 w-4 flex-shrink-0 text-emerald-500" /> Escrow-ready contract lifecycle</li>
+              <li className="flex items-start gap-2"><CheckCircle2 className="mt-0.5 h-4 w-4 flex-shrink-0 text-emerald-500" /> Tracking visibility for authorized parties</li>
+              <li className="flex items-start gap-2"><CheckCircle2 className="mt-0.5 h-4 w-4 flex-shrink-0 text-emerald-500" /> Government-grade analytics readiness</li>
+              <li className="flex items-start gap-2"><CheckCircle2 className="mt-0.5 h-4 w-4 flex-shrink-0 text-emerald-500" /> MTN Mobile Money payment integration</li>
+              <li className="flex items-start gap-2"><CheckCircle2 className="mt-0.5 h-4 w-4 flex-shrink-0 text-emerald-500" /> Multi-language support (EN/FR/RW)</li>
+            </ul>
+          </Card>
+        </section>
+
+        {/* Quick access navigation */}
+        <section className="space-y-4">
+          <h2 className="text-2xl font-black text-slate-900">Explore RASS</h2>
+          <div className="grid grid-cols-2 gap-3 md:grid-cols-4">
+            {[
+              { label: 'Marketplace', desc: 'Browse verified produce', route: '/marketplace', icon: <Activity className="h-5 w-5" /> },
+              { label: 'Market prices', desc: 'Live pricing data', route: '/prices', icon: <BarChart3 className="h-5 w-5" /> },
+              { label: 'AI forecasting', desc: 'Price predictions', route: '/ai-forecast', icon: <Zap className="h-5 w-5" /> },
+              { label: 'Track deliveries', desc: 'Real-time GPS tracking', route: '/tracking', icon: <Truck className="h-5 w-5" /> },
+            ].map((item) => (
+              <motion.button key={item.label} type="button" className="text-left" onClick={() => navigate(item.route)} whileHover={{ y: -3 }}>
+                <Card className="h-full p-4 hover:shadow-md transition-shadow">
+                  <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-emerald-50 text-emerald-600">{item.icon}</div>
+                  <h4 className="mt-2 text-sm font-black text-slate-900">{item.label}</h4>
+                  <p className="mt-0.5 text-xs text-slate-500">{item.desc}</p>
+                  <div className="mt-2 flex items-center gap-1 text-xs font-bold text-emerald-600">
+                    Open <ArrowRight className="h-3 w-3" />
+                  </div>
+                </Card>
+              </motion.button>
+            ))}
+          </div>
+        </section>
+
+        <section>
+          <div className="mb-4 flex items-center justify-between">
+            <h2 className="text-2xl font-black text-slate-900">Featured listings</h2>
+            <Button variant="outline" onClick={() => navigate('/marketplace')}>See all</Button>
+          </div>
+          <p className="mb-3 text-xs text-slate-500">Listings remain prioritized for quick browsing and faster buyer actions.</p>
+          {marketActionError && <div className="mb-3 rounded-xl border border-red-200 bg-red-50 px-3 py-2 text-xs text-red-700">{marketActionError}</div>}
+          {isLoading ? (
+            <Loader label="Loading featured listings..." />
+          ) : (
+            <ProductGrid items={listings} onView={(id) => navigate(`/marketplace/${id}`)} onContact={handleContactSeller} onAdd={handleAddToCart} />
           )}
+        </section>
 
-          <Box sx={{ textAlign: 'center', mt: 3 }}>
-            <Button
-              variant="outlined"
-              onClick={() => navigate('/marketplace')}
-              endIcon={<FilterList />}
-            >
-              View All Listings
+        {/* Trust & CTA footer */}
+        <section className="rounded-2xl bg-gradient-to-r from-[#002D15] to-[#00793E] p-8 text-center text-white">
+          <h2 className="text-2xl font-black">Ready to join Rwanda&apos;s digital agricultural revolution?</h2>
+          <p className="mx-auto mt-3 max-w-lg text-sm text-emerald-200">
+            Whether you&apos;re a farmer, cooperative manager, buyer, transporter, or government official — RASS has the tools you need.
+          </p>
+          <div className="mt-6 flex flex-wrap items-center justify-center gap-4">
+            <Button onClick={() => navigate(isAuthenticated ? '/dashboard' : '/register')} className="bg-white text-[#002D15] hover:bg-emerald-50 font-bold px-6 py-2.5 rounded-xl">
+              {isAuthenticated ? 'Go to dashboard' : 'Get started free'}
             </Button>
-          </Box>
-        </CardContent>
-      </Card>
-
-      {/* Live Prices Section */}
-      <Card elevation={0} sx={{ border: '1px solid #e5e7eb', borderRadius: 2 }}>
-        <CardContent>
-          <Stack direction={{ xs: 'column', md: 'row' }} justifyContent="space-between" gap={3}>
-            <Stack spacing={1}>
-              <Stack direction="row" alignItems="center" spacing={1}>
-                <TrendingUp color="success" />
-                <Typography variant="h6" fontWeight={800}>
-                  Live Market Prices
-                </Typography>
-              </Stack>
-              <Typography variant="body2" color="text.secondary">
-                Real-time submissions from market agents across districts.
-              </Typography>
-              <Stack direction="row" spacing={1} flexWrap="wrap" gap={1}>
-                {prices?.map((p) => (
-                  <Chip key={p.id} label={`${p.market} · ${p.crop} · ${p.pricePerKg} RWF/kg`} color="success" variant="outlined" />
-                ))}
-                {!prices?.length && <Typography variant="body2">No price data yet.</Typography>}
-              </Stack>
-            </Stack>
-            <Stack spacing={1}>
-              <Typography variant="body2" color="text.secondary">
-                Modules working together:
-              </Typography>
-              <Stack direction="row" spacing={1} flexWrap="wrap">
-                {['Data Collection', 'AI Forecasting', 'Digital Marketplace', 'Smart Logistics', 'Transparency'].map((m) => (
-                  <Chip key={m} label={m} color="primary" variant="outlined" />
-                ))}
-              </Stack>
-            </Stack>
-          </Stack>
-        </CardContent>
-      </Card>
-
-      {/* Snackbar for notifications */}
-      <Snackbar
-        open={snackbar.open}
-        autoHideDuration={4000}
-        onClose={() => setSnackbar({ ...snackbar, open: false })}
-      >
-        <Alert
-          onClose={() => setSnackbar({ ...snackbar, open: false })}
-          severity={snackbar.severity}
-          sx={{ width: '100%' }}
-        >
-          {snackbar.message}
-        </Alert>
-      </Snackbar>
-    </Box>
+            <Button variant="outline" onClick={() => navigate('/marketplace')} className="border-white/40 text-white hover:bg-white/10 px-6 py-2.5 rounded-xl">
+              Browse marketplace
+            </Button>
+          </div>
+          <div className="mt-8 flex flex-wrap items-center justify-center gap-6 text-xs text-emerald-200">
+            <span className="flex items-center gap-1.5"><ShieldCheck className="h-4 w-4" /> Secure & verified</span>
+            <span className="flex items-center gap-1.5"><Globe className="h-4 w-4" /> National coverage</span>
+            <span className="flex items-center gap-1.5"><Zap className="h-4 w-4" /> AI-powered</span>
+            <span className="flex items-center gap-1.5"><Lock className="h-4 w-4" /> Digital contracts</span>
+          </div>
+        </section>
+      </div>
+    </div>
   );
 };

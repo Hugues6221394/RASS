@@ -1,12 +1,72 @@
 /** @type {import('tailwindcss').Config} */
 export default {
-  content: [
-    "./index.html",
-    "./src/**/*.{js,ts,jsx,tsx}",
-  ],
+  content: ["./index.html", "./src/**/*.{js,ts,jsx,tsx}"],
   theme: {
-    extend: {},
+    extend: {
+      colors: {
+        rass: {
+          50:  '#EDFFF6',
+          100: '#D5FFE9',
+          200: '#AEFFD5',
+          300: '#74F5B3',
+          400: '#35E48D',
+          500: '#0FC96A',
+          600: '#00A651',
+          700: '#00793E',
+          800: '#005B2F',
+          900: '#003D20',
+          950: '#001C0E',
+        },
+        gold: {
+          50:  '#FFFBEB',
+          100: '#FEF3C7',
+          200: '#FDE68A',
+          300: '#FCD34D',
+          400: '#FBBF24',
+          500: '#F5A623',
+          600: '#D97706',
+          700: '#B45309',
+          800: '#92400E',
+          900: '#78350F',
+        },
+      },
+      fontFamily: {
+        sans: ['Inter', 'system-ui', '-apple-system', 'BlinkMacSystemFont', '"Segoe UI"', 'sans-serif'],
+      },
+      boxShadow: {
+        'card':      '0 1px 4px 0 rgba(0,0,0,0.06)',
+        'card-md':   '0 4px 16px 0 rgba(0,0,0,0.08)',
+        'card-lg':   '0 8px 32px 0 rgba(0,0,0,0.10)',
+        'glow-green':'0 0 24px rgba(0,166,81,0.28)',
+        'glow-gold': '0 0 24px rgba(245,166,35,0.32)',
+        'inner-top': 'inset 0 1px 0 rgba(255,255,255,0.15)',
+      },
+      animation: {
+        'fade-in':   'fadeIn 0.2s ease-out',
+        'slide-up':  'slideUp 0.28s ease-out',
+        'scale-in':  'scaleIn 0.18s ease-out',
+        'shimmer':   'shimmer 1.6s infinite linear',
+        'pulse-dot': 'pulseDot 1.4s ease-in-out infinite',
+      },
+      keyframes: {
+        fadeIn:   { from:{ opacity:'0' },                                          to:{ opacity:'1' } },
+        slideUp:  { from:{ opacity:'0', transform:'translateY(10px)' },            to:{ opacity:'1', transform:'translateY(0)' } },
+        scaleIn:  { from:{ opacity:'0', transform:'scale(0.96)' },                 to:{ opacity:'1', transform:'scale(1)' } },
+        shimmer:  { '0%':{ backgroundPosition:'-200% 0' },                        '100%':{ backgroundPosition:'200% 0' } },
+        pulseDot: { '0%,100%':{ transform:'scale(1)', opacity:'1' },              '50%':{ transform:'scale(1.25)', opacity:'0.7' } },
+      },
+      backgroundImage: {
+        'grid-sm': "url(\"data:image/svg+xml,%3Csvg width='32' height='32' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M 32 0 L 0 0 0 32' fill='none' stroke='%2300793E18' stroke-width='1'/%3E%3C/svg%3E\")",
+        'farmer-hdr':     'linear-gradient(135deg,#003D20 0%,#005B2F 50%,#00793E 100%)',
+        'coop-hdr':       'linear-gradient(135deg,#064E3B 0%,#065F46 50%,#047857 100%)',
+        'buyer-hdr':      'linear-gradient(135deg,#1E3A8A 0%,#1D4ED8 50%,#3B82F6 100%)',
+        'transport-hdr':  'linear-gradient(135deg,#78350F 0%,#92400E 50%,#D97706 100%)',
+        'agent-hdr':      'linear-gradient(135deg,#3730A3 0%,#4338CA 50%,#6366F1 100%)',
+        'gov-hdr':        'linear-gradient(135deg,#0C2340 0%,#1E3A5F 50%,#1D4ED8 100%)',
+        'admin-hdr':      'linear-gradient(135deg,#0F172A 0%,#1E293B 50%,#334155 100%)',
+        'storage-hdr':    'linear-gradient(135deg,#0C4A6E 0%,#075985 50%,#0284C7 100%)',
+      },
+    },
   },
   plugins: [],
 }
-
