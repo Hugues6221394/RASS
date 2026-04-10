@@ -1,10 +1,14 @@
 import { useState, useEffect } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { api } from '../api/client';
+import { useTranslation } from 'react-i18next';
+import { useRwandaAdministrativeData } from '../hooks/useRwandaAdministrativeData';
 
 export const TransporterManagementPage = () => {
   const { id } = useParams();
   const navigate = useNavigate();
+  const { t } = useTranslation();
+  const { provinces } = useRwandaAdministrativeData();
   const isEdit = !!id;
   
   const [loading, setLoading] = useState(false);
@@ -20,6 +24,7 @@ export const TransporterManagementPage = () => {
     licensePlate: '',
     operatingRegions: ''
   });
+  const [selectedRegions, setSelectedRegions] = useState<string[]>([]);
 
   useEffect(() => {
     if (isEdit) {
@@ -46,6 +51,10 @@ export const TransporterManagementPage = () => {
             ? transporter.operatingRegions.join(', ')
             : (transporter.operatingRegions || transporter.OperatingRegions || '')
         });
+        const normalizedRegions = Array.isArray(transporter.operatingRegions)
+          ? transporter.operatingRegions
+          : String(transporter.operatingRegions || transporter.OperatingRegions || '').split(',').map((value) => value.trim()).filter(Boolean);
+        setSelectedRegions(normalizedRegions);
       }
     } catch (error) {
       console.error('Failed to load transporter:', error);
@@ -58,19 +67,19 @@ export const TransporterManagementPage = () => {
     try {
       const submitData = {
         ...formData,
-        operatingRegions: formData.operatingRegions.split(',').map(r => r.trim()).filter(r => r)
+        operatingRegions: selectedRegions
       };
 
       if (isEdit) {
         await api.put(`/api/admin/transporters/${id}`, submitData);
-        alert('Transporter updated successfully!');
+        alert(t('admin.transporter_updated'));
       } else {
         await api.post('/api/transporters/register', submitData);
-        alert('Transporter created successfully!');
+        alert(t('admin.transporter_created'));
       }
       navigate('/admin');
     } catch (error: any) {
-      alert(error.response?.data?.message || error.response?.data || 'Failed to save transporter');
+      alert(error.response?.data?.message || error.response?.data || t('admin.transporter_save_failed'));
     } finally {
       setLoading(false);
     }
@@ -81,14 +90,14 @@ export const TransporterManagementPage = () => {
       <div className="max-w-4xl mx-auto px-6">
         <div className="bg-white rounded-xl shadow-lg p-8">
           <h1 className="text-3xl font-bold text-gray-900 mb-6">
-            {isEdit ? 'Edit Transporter' : 'Create New Transporter'}
+            {isEdit ? t('admin.edit_transporter') : t('admin.create_transporter')}
           </h1>
 
           <form onSubmit={handleSubmit} className="space-y-6">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Company Name *
+                  {t('common.company_name')} *
                 </label>
                 <input
                   type="text"
@@ -101,7 +110,7 @@ export const TransporterManagementPage = () => {
 
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Contact Person *
+                  {t('common.contact_person')} *
                 </label>
                 <input
                   type="text"
@@ -114,7 +123,7 @@ export const TransporterManagementPage = () => {
 
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Email *
+                  {t('common.email')} *
                 </label>
                 <input
                   type="email"
@@ -128,7 +137,7 @@ export const TransporterManagementPage = () => {
               {!isEdit && (
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Password *
+                    {t('auth.password')} *
                   </label>
                   <input
                     type="password"
@@ -142,7 +151,7 @@ export const TransporterManagementPage = () => {
 
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">
-                  License Number *
+                  {t('admin.license_number')} *
                 </label>
                 <input
                   type="text"
@@ -155,7 +164,7 @@ export const TransporterManagementPage = () => {
 
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Phone *
+                  {t('common.phone')} *
                 </label>
                 <input
                   type="tel"
@@ -168,7 +177,7 @@ export const TransporterManagementPage = () => {
 
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Vehicle Type *
+                  {t('common.vehicle_type')} *
                 </label>
                 <select
                   value={formData.vehicleType}
@@ -176,18 +185,18 @@ export const TransporterManagementPage = () => {
                   className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500"
                   required
                 >
-                  <option value="">Select vehicle type...</option>
-                  <option value="Truck">Truck</option>
-                  <option value="Pickup">Pickup</option>
-                  <option value="Van">Van</option>
-                  <option value="Motorcycle">Motorcycle</option>
-                  <option value="Other">Other</option>
+                  <option value="">{t('admin.select_vehicle_type')}</option>
+                  <option value="Truck">{t('admin.vehicle_truck')}</option>
+                  <option value="Pickup">{t('admin.vehicle_pickup')}</option>
+                  <option value="Van">{t('admin.vehicle_van')}</option>
+                  <option value="Motorcycle">{t('admin.vehicle_motorcycle')}</option>
+                  <option value="Other">{t('admin.vehicle_other')}</option>
                 </select>
               </div>
 
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">
-                  License Plate *
+                  {t('common.license_plate')} *
                 </label>
                 <input
                   type="text"
@@ -200,7 +209,7 @@ export const TransporterManagementPage = () => {
 
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Capacity (kg) *
+                  {t('transporter.capacity_kg')} *
                 </label>
                 <input
                   type="number"
@@ -213,18 +222,25 @@ export const TransporterManagementPage = () => {
 
               <div className="md:col-span-2">
                 <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Operating Regions *
+                  {t('admin.operating_regions')} *
                 </label>
-                <input
-                  type="text"
-                  value={formData.operatingRegions}
-                  onChange={(e) => setFormData({...formData, operatingRegions: e.target.value})}
-                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500"
-                  placeholder="e.g., Kigali, Northern, Eastern (comma-separated)"
-                  required
-                />
+                <div className="grid grid-cols-2 gap-2 rounded-lg border border-gray-300 p-3 md:grid-cols-3">
+                  {provinces.map((province) => {
+                    const checked = selectedRegions.includes(province);
+                    return (
+                      <label key={province} className={`flex cursor-pointer items-center gap-2 rounded-lg border px-3 py-2 text-sm ${checked ? 'border-orange-400 bg-orange-50 text-orange-700' : 'border-gray-200 bg-white text-gray-700'}`}>
+                        <input
+                          type="checkbox"
+                          checked={checked}
+                          onChange={(event) => setSelectedRegions((current) => event.target.checked ? [...current, province] : current.filter((value) => value !== province))}
+                        />
+                        <span>{province}</span>
+                      </label>
+                    );
+                  })}
+                </div>
                 <p className="text-xs text-gray-500 mt-1">
-                  Enter regions separated by commas
+                  {t('admin.operating_regions_help')}
                 </p>
               </div>
             </div>
@@ -235,14 +251,14 @@ export const TransporterManagementPage = () => {
                 disabled={loading}
                 className="flex-1 bg-gradient-to-r from-orange-600 to-red-600 text-white px-6 py-3 rounded-lg hover:shadow-lg transition-all font-medium disabled:opacity-50"
               >
-                {loading ? 'Saving...' : (isEdit ? 'Update Transporter' : 'Create Transporter')}
+                {loading ? t('common.saving') : (isEdit ? t('admin.update_transporter') : t('admin.create_transporter_action'))}
               </button>
               <button
                 type="button"
                 onClick={() => navigate('/admin')}
                 className="flex-1 bg-gray-200 text-gray-700 px-6 py-3 rounded-lg hover:bg-gray-300 transition-colors font-medium"
               >
-                Cancel
+                {t('common.cancel')}
               </button>
             </div>
           </form>

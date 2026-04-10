@@ -43,9 +43,29 @@ public class TransportController : ControllerBase
     }
 
     [HttpPost]
-    [Authorize(Roles = "Transporter,Admin")]
+    [Authorize(Roles = "CooperativeManager,Transporter,Admin")]
     public async Task<IActionResult> CreateTransport(CreateTransportRequest request)
     {
+        if (string.IsNullOrWhiteSpace(request.Origin))
+            return BadRequest("Pickup location is required.");
+        if (string.IsNullOrWhiteSpace(request.Destination))
+            return BadRequest("Drop location is required.");
+        if (request.LoadKg <= 0)
+            return BadRequest("Load kg must be greater than 0.");
+        if (request.DistanceKm <= 0)
+            return BadRequest("Distance is required and must be greater than 0.");
+        if (request.EstimatedDeliveryHours <= 0)
+            return BadRequest("Estimated delivery time is required and must be greater than 0.");
+
+        Guid? assignedTransporterId = null;
+        if (request.TransporterId.HasValue)
+        {
+            var transporter = await _db.TransporterProfiles.FirstOrDefaultAsync(t => t.Id == request.TransporterId.Value && t.IsActive);
+            if (transporter == null) return BadRequest("Selected transporter is not available.");
+            if (transporter.CapacityKg < request.LoadKg) return BadRequest("Selected transporter capacity is insufficient.");
+            assignedTransporterId = transporter.Id;
+        }
+
         var transport = new TransportRequest
         {
             Id = Guid.NewGuid(),
@@ -56,7 +76,10 @@ public class TransportController : ControllerBase
             PickupStart = request.PickupStart == default ? DateTime.UtcNow.AddHours(6) : request.PickupStart,
             PickupEnd = request.PickupEnd == default ? DateTime.UtcNow.AddHours(18) : request.PickupEnd,
             Price = request.Price,
-            Status = "Pending"
+            Status = assignedTransporterId.HasValue ? "Assigned" : "Pending",
+            TransporterId = assignedTransporterId,
+            AssignedAt = assignedTransporterId.HasValue ? DateTime.UtcNow : null,
+            Notes = $"DistanceKm:{Math.Round(request.DistanceKm, 2)};EstimatedDeliveryHours:{Math.Round(request.EstimatedDeliveryHours, 2)}"
         };
 
         _db.TransportRequests.Add(transport);

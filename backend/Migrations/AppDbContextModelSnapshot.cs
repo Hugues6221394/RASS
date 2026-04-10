@@ -33,18 +33,58 @@ namespace Rass.Api.Migrations
                         .HasMaxLength(200)
                         .HasColumnType("character varying(200)");
 
+                    b.Property<string>("ActionType")
+                        .HasMaxLength(50)
+                        .HasColumnType("character varying(50)");
+
                     b.Property<string>("Actor")
                         .IsRequired()
                         .HasMaxLength(200)
                         .HasColumnType("character varying(200)");
 
+                    b.Property<string>("ActorRole")
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)");
+
+                    b.Property<string>("AfterState")
+                        .HasColumnType("text");
+
+                    b.Property<string>("BeforeState")
+                        .HasColumnType("text");
+
+                    b.Property<string>("DeviceInfo")
+                        .HasMaxLength(500)
+                        .HasColumnType("character varying(500)");
+
+                    b.Property<double?>("DurationMs")
+                        .HasColumnType("double precision");
+
+                    b.Property<string>("EntityId")
+                        .HasMaxLength(200)
+                        .HasColumnType("character varying(200)");
+
+                    b.Property<string>("EntityType")
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)");
+
+                    b.Property<string>("IpAddress")
+                        .HasMaxLength(60)
+                        .HasColumnType("character varying(60)");
+
                     b.Property<string>("Metadata")
                         .HasColumnType("text");
+
+                    b.Property<int?>("StatusCode")
+                        .HasColumnType("integer");
 
                     b.Property<DateTime>("Timestamp")
                         .HasColumnType("timestamp with time zone");
 
                     b.HasKey("Id");
+
+                    b.HasIndex("ActorRole");
+
+                    b.HasIndex("Timestamp", "ActionType");
 
                     b.ToTable("AuditLogs");
                 });
@@ -219,19 +259,126 @@ namespace Rass.Api.Migrations
                         .ValueGeneratedOnAdd()
                         .HasColumnType("uuid");
 
+                    b.Property<DateTime?>("ActivatedAt")
+                        .HasColumnType("timestamp with time zone");
+
                     b.Property<decimal>("AgreedPrice")
                         .HasColumnType("numeric");
+
+                    b.Property<bool>("BuyerApproved")
+                        .HasColumnType("boolean");
+
+                    b.Property<DateTime?>("BuyerApprovedAt")
+                        .HasColumnType("timestamp with time zone");
 
                     b.Property<Guid>("BuyerOrderId")
                         .HasColumnType("uuid");
 
+                    b.Property<string>("BuyerSignatureOtp")
+                        .HasMaxLength(10)
+                        .HasColumnType("character varying(10)");
+
+                    b.Property<bool>("BuyerSigned")
+                        .HasColumnType("boolean");
+
+                    b.Property<DateTime?>("BuyerSignedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<DateTime?>("CompletedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("ContractSource")
+                        .IsRequired()
+                        .HasMaxLength(40)
+                        .HasColumnType("character varying(40)");
+
                     b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<DateTime?>("DeliveryDeadline")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("DeliveryTerms")
+                        .IsRequired()
+                        .HasMaxLength(500)
+                        .HasColumnType("character varying(500)");
+
+                    b.Property<string>("DisputeReason")
+                        .HasMaxLength(500)
+                        .HasColumnType("character varying(500)");
+
+                    b.Property<string>("DisputeResolution")
+                        .HasMaxLength(500)
+                        .HasColumnType("character varying(500)");
+
+                    b.Property<DateTime?>("DisputeResolvedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<Guid?>("DisputeResolvedBy")
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTime?>("DisputedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("DocumentContent")
+                        .HasMaxLength(8000)
+                        .HasColumnType("character varying(8000)");
+
+                    b.Property<string>("DocumentTitle")
+                        .IsRequired()
+                        .HasMaxLength(200)
+                        .HasColumnType("character varying(200)");
+
+                    b.Property<decimal>("EscrowAmount")
+                        .HasColumnType("numeric");
+
+                    b.Property<DateTime?>("EscrowFundedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<DateTime?>("EscrowReleasedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("EscrowStatus")
+                        .IsRequired()
+                        .HasMaxLength(40)
+                        .HasColumnType("character varying(40)");
+
+                    b.Property<string>("PaymentTerms")
+                        .IsRequired()
+                        .HasMaxLength(500)
+                        .HasColumnType("character varying(500)");
+
+                    b.Property<string>("PenaltyClause")
+                        .IsRequired()
+                        .HasMaxLength(500)
+                        .HasColumnType("character varying(500)");
+
+                    b.Property<bool>("SellerApproved")
+                        .HasColumnType("boolean");
+
+                    b.Property<DateTime?>("SellerApprovedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("SellerSignatureOtp")
+                        .HasMaxLength(10)
+                        .HasColumnType("character varying(10)");
+
+                    b.Property<bool>("SellerSigned")
+                        .HasColumnType("boolean");
+
+                    b.Property<DateTime?>("SellerSignedAt")
                         .HasColumnType("timestamp with time zone");
 
                     b.Property<string>("Status")
                         .IsRequired()
                         .HasMaxLength(40)
                         .HasColumnType("character varying(40)");
+
+                    b.Property<double>("TotalQuantityKg")
+                        .HasColumnType("double precision");
+
+                    b.Property<decimal>("TotalValue")
+                        .HasColumnType("numeric");
 
                     b.Property<string>("TrackingId")
                         .IsRequired()
@@ -265,6 +412,10 @@ namespace Rass.Api.Migrations
                     b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("uuid");
+
+                    b.Property<string>("Cell")
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)");
 
                     b.Property<DateTime>("CreatedAt")
                         .HasColumnType("timestamp with time zone");
@@ -308,11 +459,353 @@ namespace Rass.Api.Migrations
                         .HasMaxLength(100)
                         .HasColumnType("character varying(100)");
 
+                    b.Property<string>("Sector")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)");
+
                     b.HasKey("Id");
 
                     b.HasIndex("ManagerId");
 
                     b.ToTable("Cooperatives");
+                });
+
+            modelBuilder.Entity("Rass.Api.Domain.Entities.CropCatalog", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<Guid?>("CreatedByUserId")
+                        .HasColumnType("uuid");
+
+                    b.Property<bool>("IsGovernmentRegistered")
+                        .HasColumnType("boolean");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasMaxLength(120)
+                        .HasColumnType("character varying(120)");
+
+                    b.Property<string>("NormalizedName")
+                        .IsRequired()
+                        .HasMaxLength(160)
+                        .HasColumnType("character varying(160)");
+
+                    b.Property<bool>("RequiresGovernmentReview")
+                        .HasColumnType("boolean");
+
+                    b.Property<string>("SourceRole")
+                        .IsRequired()
+                        .HasMaxLength(40)
+                        .HasColumnType("character varying(40)");
+
+                    b.Property<string>("Status")
+                        .IsRequired()
+                        .HasMaxLength(40)
+                        .HasColumnType("character varying(40)");
+
+                    b.Property<DateTime?>("UpdatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("CreatedByUserId");
+
+                    b.HasIndex("NormalizedName")
+                        .IsUnique();
+
+                    b.ToTable("CropCatalogs");
+                });
+
+            modelBuilder.Entity("Rass.Api.Domain.Entities.CropShareBid", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<Guid>("CropShareRequestId")
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("DeliveryTerms")
+                        .HasMaxLength(500)
+                        .HasColumnType("character varying(500)");
+
+                    b.Property<string>("Notes")
+                        .HasMaxLength(1000)
+                        .HasColumnType("character varying(1000)");
+
+                    b.Property<decimal>("ProposedPricePerKg")
+                        .HasColumnType("numeric");
+
+                    b.Property<double>("ProposedQuantityKg")
+                        .HasColumnType("double precision");
+
+                    b.Property<string>("Status")
+                        .IsRequired()
+                        .HasMaxLength(20)
+                        .HasColumnType("character varying(20)");
+
+                    b.Property<Guid>("SupplierCooperativeId")
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTime?>("UpdatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("SupplierCooperativeId");
+
+                    b.HasIndex("CropShareRequestId", "SupplierCooperativeId")
+                        .IsUnique();
+
+                    b.HasIndex("Status", "CreatedAt");
+
+                    b.ToTable("CropShareBids");
+                });
+
+            modelBuilder.Entity("Rass.Api.Domain.Entities.CropShareRequest", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<decimal?>("AgreedPricePerKg")
+                        .HasColumnType("numeric");
+
+                    b.Property<double?>("AgreedQuantityKg")
+                        .HasColumnType("double precision");
+
+                    b.Property<bool>("BroadcastToAll")
+                        .HasColumnType("boolean");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("Crop")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)");
+
+                    b.Property<string>("DeliveryTerms")
+                        .HasMaxLength(500)
+                        .HasColumnType("character varying(500)");
+
+                    b.Property<DateTime?>("FulfilledAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("Notes")
+                        .HasMaxLength(1000)
+                        .HasColumnType("character varying(1000)");
+
+                    b.Property<decimal?>("OfferedPricePerKg")
+                        .HasColumnType("numeric");
+
+                    b.Property<double>("QuantityKg")
+                        .HasColumnType("double precision");
+
+                    b.Property<Guid>("RequesterCooperativeId")
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTime?>("RespondedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("ResponseNotes")
+                        .HasMaxLength(1000)
+                        .HasColumnType("character varying(1000)");
+
+                    b.Property<string>("Status")
+                        .IsRequired()
+                        .HasMaxLength(30)
+                        .HasColumnType("character varying(30)");
+
+                    b.Property<Guid?>("SupplierCooperativeId")
+                        .HasColumnType("uuid");
+
+                    b.Property<Guid?>("TargetCooperativeId")
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("UrgencyLevel")
+                        .IsRequired()
+                        .HasMaxLength(20)
+                        .HasColumnType("character varying(20)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("RequesterCooperativeId");
+
+                    b.HasIndex("SupplierCooperativeId");
+
+                    b.HasIndex("TargetCooperativeId");
+
+                    b.HasIndex("Status", "Crop");
+
+                    b.ToTable("CropShareRequests");
+                });
+
+            modelBuilder.Entity("Rass.Api.Domain.Entities.DataQualityIssue", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<bool>("AutoCorrectable")
+                        .HasColumnType("boolean");
+
+                    b.Property<DateTime?>("CorrectedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<Guid?>("CorrectedBy")
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("CorrectionNotes")
+                        .HasMaxLength(500)
+                        .HasColumnType("character varying(500)");
+
+                    b.Property<string>("Crop")
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)");
+
+                    b.Property<string>("CurrentValue")
+                        .HasMaxLength(500)
+                        .HasColumnType("character varying(500)");
+
+                    b.Property<string>("Description")
+                        .IsRequired()
+                        .HasMaxLength(1000)
+                        .HasColumnType("character varying(1000)");
+
+                    b.Property<DateTime>("DetectedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<Guid?>("EntityId")
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("EntityType")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)");
+
+                    b.Property<string>("ExpectedValue")
+                        .HasMaxLength(500)
+                        .HasColumnType("character varying(500)");
+
+                    b.Property<string>("FieldName")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)");
+
+                    b.Property<string>("IssueType")
+                        .IsRequired()
+                        .HasMaxLength(50)
+                        .HasColumnType("character varying(50)");
+
+                    b.Property<string>("Region")
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)");
+
+                    b.Property<Guid?>("ReportedByUserId")
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("Severity")
+                        .IsRequired()
+                        .HasMaxLength(20)
+                        .HasColumnType("character varying(20)");
+
+                    b.Property<string>("Status")
+                        .IsRequired()
+                        .HasMaxLength(30)
+                        .HasColumnType("character varying(30)");
+
+                    b.Property<string>("SuggestedCorrection")
+                        .HasMaxLength(500)
+                        .HasColumnType("character varying(500)");
+
+                    b.Property<bool>("WasAutoCorrected")
+                        .HasColumnType("boolean");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("Status", "Severity");
+
+                    b.ToTable("DataQualityIssues");
+                });
+
+            modelBuilder.Entity("Rass.Api.Domain.Entities.DeliveryTrackingInfo", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<DateTime?>("CurrentEta")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<double?>("CurrentLatitude")
+                        .HasColumnType("double precision");
+
+                    b.Property<double?>("CurrentLongitude")
+                        .HasColumnType("double precision");
+
+                    b.Property<int>("DelayMinutes")
+                        .HasColumnType("integer");
+
+                    b.Property<double>("DestinationLatitude")
+                        .HasColumnType("double precision");
+
+                    b.Property<double>("DestinationLongitude")
+                        .HasColumnType("double precision");
+
+                    b.Property<double>("DistanceTraveledKm")
+                        .HasColumnType("double precision");
+
+                    b.Property<bool>("IsDelayed")
+                        .HasColumnType("boolean");
+
+                    b.Property<DateTime?>("LastLocationUpdate")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<double>("OriginLatitude")
+                        .HasColumnType("double precision");
+
+                    b.Property<double>("OriginLongitude")
+                        .HasColumnType("double precision");
+
+                    b.Property<DateTime?>("OriginalEta")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<int>("ProgressPercent")
+                        .HasColumnType("integer");
+
+                    b.Property<double>("TotalDistanceKm")
+                        .HasColumnType("double precision");
+
+                    b.Property<string>("TrackingStatus")
+                        .IsRequired()
+                        .HasMaxLength(40)
+                        .HasColumnType("character varying(40)");
+
+                    b.Property<Guid>("TransportRequestId")
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTime>("UpdatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("TransportRequestId")
+                        .IsUnique();
+
+                    b.ToTable("DeliveryTrackingInfos");
                 });
 
             modelBuilder.Entity("Rass.Api.Domain.Entities.Farmer", b =>
@@ -421,6 +914,14 @@ namespace Rass.Api.Migrations
                         .ValueGeneratedOnAdd()
                         .HasColumnType("uuid");
 
+                    b.Property<string>("ConditionGrade")
+                        .HasMaxLength(30)
+                        .HasColumnType("character varying(30)");
+
+                    b.Property<string>("ConditionNote")
+                        .HasMaxLength(1000)
+                        .HasColumnType("character varying(1000)");
+
                     b.Property<DateTime>("CreatedAt")
                         .HasColumnType("timestamp with time zone");
 
@@ -458,6 +959,32 @@ namespace Rass.Api.Migrations
                     b.ToTable("HarvestDeclarations");
                 });
 
+            modelBuilder.Entity("Rass.Api.Domain.Entities.ListingImage", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<int>("DisplayOrder")
+                        .HasColumnType("integer");
+
+                    b.Property<string>("ImageUrl")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<Guid>("MarketListingId")
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTime>("UploadedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("MarketListingId");
+
+                    b.ToTable("ListingImages");
+                });
+
             modelBuilder.Entity("Rass.Api.Domain.Entities.Lot", b =>
                 {
                     b.Property<Guid>("Id")
@@ -467,12 +994,24 @@ namespace Rass.Api.Migrations
                     b.Property<Guid?>("CooperativeId")
                         .HasColumnType("uuid");
 
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("timestamp with time zone");
+
                     b.Property<string>("Crop")
                         .IsRequired()
                         .HasMaxLength(100)
                         .HasColumnType("character varying(100)");
 
+                    b.Property<int?>("DaysSinceHarvest")
+                        .HasColumnType("integer");
+
                     b.Property<DateTime>("ExpectedHarvestDate")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<decimal?>("ExpectedPricePerKg")
+                        .HasColumnType("numeric");
+
+                    b.Property<DateTime?>("ExpiryDate")
                         .HasColumnType("timestamp with time zone");
 
                     b.Property<Guid?>("FarmerId")
@@ -481,12 +1020,39 @@ namespace Rass.Api.Migrations
                     b.Property<DateTime?>("HarvestedAt")
                         .HasColumnType("timestamp with time zone");
 
+                    b.Property<double?>("LandAreaHectares")
+                        .HasColumnType("double precision");
+
+                    b.Property<decimal?>("MarketPriceAtListing")
+                        .HasColumnType("numeric");
+
+                    b.Property<double?>("MoisturePercent")
+                        .HasColumnType("double precision");
+
+                    b.Property<string>("ProductionMethod")
+                        .HasMaxLength(50)
+                        .HasColumnType("character varying(50)");
+
                     b.Property<string>("QualityGrade")
                         .IsRequired()
                         .HasMaxLength(20)
                         .HasColumnType("character varying(20)");
 
+                    b.Property<string>("QualityNotes")
+                        .HasMaxLength(1000)
+                        .HasColumnType("character varying(1000)");
+
                     b.Property<double>("QuantityKg")
+                        .HasColumnType("double precision");
+
+                    b.Property<string>("Season")
+                        .HasMaxLength(20)
+                        .HasColumnType("character varying(20)");
+
+                    b.Property<double?>("SourceLatitude")
+                        .HasColumnType("double precision");
+
+                    b.Property<double?>("SourceLongitude")
                         .HasColumnType("double precision");
 
                     b.Property<string>("Status")
@@ -494,8 +1060,17 @@ namespace Rass.Api.Migrations
                         .HasMaxLength(40)
                         .HasColumnType("character varying(40)");
 
+                    b.Property<Guid?>("StorageFacilityId")
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTime?>("UpdatedAt")
+                        .HasColumnType("timestamp with time zone");
+
                     b.Property<bool>("Verified")
                         .HasColumnType("boolean");
+
+                    b.Property<double?>("YieldPerHectare")
+                        .HasColumnType("double precision");
 
                     b.HasKey("Id");
 
@@ -503,7 +1078,36 @@ namespace Rass.Api.Migrations
 
                     b.HasIndex("FarmerId");
 
+                    b.HasIndex("StorageFacilityId");
+
                     b.ToTable("Lots");
+                });
+
+            modelBuilder.Entity("Rass.Api.Domain.Entities.LotContribution", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTime>("ContributedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<Guid>("FarmerId")
+                        .HasColumnType("uuid");
+
+                    b.Property<Guid>("LotId")
+                        .HasColumnType("uuid");
+
+                    b.Property<double>("QuantityKg")
+                        .HasColumnType("double precision");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("FarmerId");
+
+                    b.HasIndex("LotId");
+
+                    b.ToTable("LotContributions");
                 });
 
             modelBuilder.Entity("Rass.Api.Domain.Entities.MarketListing", b =>
@@ -566,8 +1170,16 @@ namespace Rass.Api.Migrations
                     b.Property<Guid?>("AgentId")
                         .HasColumnType("uuid");
 
+                    b.Property<string>("Cell")
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)");
+
                     b.Property<string>("Crop")
                         .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)");
+
+                    b.Property<string>("District")
                         .HasMaxLength(100)
                         .HasColumnType("character varying(100)");
 
@@ -576,17 +1188,176 @@ namespace Rass.Api.Migrations
                         .HasMaxLength(100)
                         .HasColumnType("character varying(100)");
 
+                    b.Property<DateTime?>("ModeratedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<Guid?>("ModeratedByUserId")
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("ModerationNote")
+                        .HasMaxLength(500)
+                        .HasColumnType("character varying(500)");
+
                     b.Property<DateTime>("ObservedAt")
                         .HasColumnType("timestamp with time zone");
 
                     b.Property<decimal>("PricePerKg")
                         .HasColumnType("numeric");
 
+                    b.Property<string>("Region")
+                        .IsRequired()
+                        .HasMaxLength(50)
+                        .HasColumnType("character varying(50)");
+
+                    b.Property<Guid?>("RegisteredMarketId")
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("Sector")
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)");
+
+                    b.Property<string>("VerificationStatus")
+                        .IsRequired()
+                        .HasMaxLength(30)
+                        .HasColumnType("character varying(30)");
+
                     b.HasKey("Id");
 
                     b.HasIndex("AgentId");
 
+                    b.HasIndex("RegisteredMarketId");
+
+                    b.HasIndex("VerificationStatus", "ObservedAt");
+
                     b.ToTable("MarketPrices");
+                });
+
+            modelBuilder.Entity("Rass.Api.Domain.Entities.MarketReport", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("AffectedCrops")
+                        .IsRequired()
+                        .HasMaxLength(500)
+                        .HasColumnType("character varying(500)");
+
+                    b.Property<Guid>("AgentUserId")
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("Description")
+                        .IsRequired()
+                        .HasMaxLength(1000)
+                        .HasColumnType("character varying(1000)");
+
+                    b.Property<string>("Market")
+                        .IsRequired()
+                        .HasMaxLength(200)
+                        .HasColumnType("character varying(200)");
+
+                    b.Property<string>("ReportType")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)");
+
+                    b.Property<string>("Severity")
+                        .IsRequired()
+                        .HasMaxLength(50)
+                        .HasColumnType("character varying(50)");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("MarketReports");
+                });
+
+            modelBuilder.Entity("Rass.Api.Domain.Entities.ModelPerformanceLog", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<double>("AccuracyRate")
+                        .HasColumnType("double precision");
+
+                    b.Property<int>("AccuratePredictions")
+                        .HasColumnType("integer");
+
+                    b.Property<double?>("ConfidenceLevel")
+                        .HasColumnType("double precision");
+
+                    b.Property<string>("Crop")
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)");
+
+                    b.Property<bool>("DriftDetected")
+                        .HasColumnType("boolean");
+
+                    b.Property<string>("DriftReason")
+                        .HasMaxLength(500)
+                        .HasColumnType("character varying(500)");
+
+                    b.Property<double?>("DriftScore")
+                        .HasColumnType("double precision");
+
+                    b.Property<string>("EvaluationPeriod")
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)");
+
+                    b.Property<DateTime?>("LastTrainedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<double?>("Mae")
+                        .HasColumnType("double precision");
+
+                    b.Property<double?>("Mape")
+                        .HasColumnType("double precision");
+
+                    b.Property<string>("Market")
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)");
+
+                    b.Property<string>("ModelName")
+                        .IsRequired()
+                        .HasMaxLength(50)
+                        .HasColumnType("character varying(50)");
+
+                    b.Property<string>("ModelType")
+                        .IsRequired()
+                        .HasMaxLength(50)
+                        .HasColumnType("character varying(50)");
+
+                    b.Property<double?>("R2Score")
+                        .HasColumnType("double precision");
+
+                    b.Property<DateTime>("RecordedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<double?>("Rmse")
+                        .HasColumnType("double precision");
+
+                    b.Property<string>("Status")
+                        .IsRequired()
+                        .HasMaxLength(40)
+                        .HasColumnType("character varying(40)");
+
+                    b.Property<int>("TotalPredictions")
+                        .HasColumnType("integer");
+
+                    b.Property<int>("TrainingDataPoints")
+                        .HasColumnType("integer");
+
+                    b.Property<double?>("TrainingDurationSeconds")
+                        .HasColumnType("double precision");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("ModelName", "RecordedAt");
+
+                    b.ToTable("ModelPerformanceLogs");
                 });
 
             modelBuilder.Entity("Rass.Api.Domain.Entities.Notification", b =>
@@ -663,6 +1434,228 @@ namespace Rass.Api.Migrations
                     b.ToTable("PaymentLedgers");
                 });
 
+            modelBuilder.Entity("Rass.Api.Domain.Entities.PlatformAlert", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTime?>("AcknowledgedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<Guid?>("AcknowledgedBy")
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("AiRecommendation")
+                        .HasMaxLength(2000)
+                        .HasColumnType("character varying(2000)");
+
+                    b.Property<string>("AlertType")
+                        .IsRequired()
+                        .HasMaxLength(50)
+                        .HasColumnType("character varying(50)");
+
+                    b.Property<double>("ConfidenceScore")
+                        .HasColumnType("double precision");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("Crop")
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)");
+
+                    b.Property<string>("Description")
+                        .IsRequired()
+                        .HasMaxLength(2000)
+                        .HasColumnType("character varying(2000)");
+
+                    b.Property<string>("District")
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)");
+
+                    b.Property<DateTime?>("ExpiresAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("Region")
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)");
+
+                    b.Property<Guid?>("RelatedEntityId")
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("RelatedEntityType")
+                        .HasMaxLength(50)
+                        .HasColumnType("character varying(50)");
+
+                    b.Property<Guid?>("RelatedUserId")
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("ResolutionNotes")
+                        .HasMaxLength(500)
+                        .HasColumnType("character varying(500)");
+
+                    b.Property<DateTime?>("ResolvedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<Guid?>("ResolvedBy")
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("Severity")
+                        .IsRequired()
+                        .HasMaxLength(20)
+                        .HasColumnType("character varying(20)");
+
+                    b.Property<string>("Status")
+                        .IsRequired()
+                        .HasMaxLength(30)
+                        .HasColumnType("character varying(30)");
+
+                    b.Property<string>("SupportingData")
+                        .HasMaxLength(1000)
+                        .HasColumnType("character varying(1000)");
+
+                    b.Property<string>("Title")
+                        .IsRequired()
+                        .HasMaxLength(200)
+                        .HasColumnType("character varying(200)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("RelatedUserId");
+
+                    b.HasIndex("Status", "Severity", "CreatedAt");
+
+                    b.ToTable("PlatformAlerts");
+                });
+
+            modelBuilder.Entity("Rass.Api.Domain.Entities.PriceRegulation", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<Guid>("CreatedBy")
+                        .HasColumnType("uuid");
+
+                    b.Property<Guid?>("CreatedByUserId")
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("Crop")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)");
+
+                    b.Property<string>("District")
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)");
+
+                    b.Property<DateTime>("EffectiveFrom")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<DateTime>("EffectiveTo")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("Market")
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)");
+
+                    b.Property<decimal>("MaxPricePerKg")
+                        .HasColumnType("numeric");
+
+                    b.Property<decimal?>("MinPricePerKg")
+                        .HasColumnType("numeric");
+
+                    b.Property<string>("Notes")
+                        .HasMaxLength(500)
+                        .HasColumnType("character varying(500)");
+
+                    b.Property<string>("Region")
+                        .IsRequired()
+                        .HasMaxLength(50)
+                        .HasColumnType("character varying(50)");
+
+                    b.Property<string>("Status")
+                        .IsRequired()
+                        .HasMaxLength(30)
+                        .HasColumnType("character varying(30)");
+
+                    b.Property<DateTime?>("UpdatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("CreatedByUserId");
+
+                    b.HasIndex("Crop", "Region", "Status");
+
+                    b.ToTable("PriceRegulations");
+                });
+
+            modelBuilder.Entity("Rass.Api.Domain.Entities.RegisteredMarket", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("Cell")
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<Guid?>("CreatedByUserId")
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("District")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)");
+
+                    b.Property<bool>("IsActive")
+                        .HasColumnType("boolean");
+
+                    b.Property<string>("Location")
+                        .HasMaxLength(250)
+                        .HasColumnType("character varying(250)");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasMaxLength(150)
+                        .HasColumnType("character varying(150)");
+
+                    b.Property<string>("NormalizedName")
+                        .IsRequired()
+                        .HasMaxLength(180)
+                        .HasColumnType("character varying(180)");
+
+                    b.Property<string>("Province")
+                        .IsRequired()
+                        .HasMaxLength(80)
+                        .HasColumnType("character varying(80)");
+
+                    b.Property<string>("Sector")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)");
+
+                    b.Property<DateTime?>("UpdatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("CreatedByUserId");
+
+                    b.HasIndex("NormalizedName")
+                        .IsUnique();
+
+                    b.ToTable("RegisteredMarkets");
+                });
+
             modelBuilder.Entity("Rass.Api.Domain.Entities.Role", b =>
                 {
                     b.Property<Guid>("Id")
@@ -677,6 +1670,243 @@ namespace Rass.Api.Migrations
                     b.HasKey("Id");
 
                     b.ToTable("Roles");
+                });
+
+            modelBuilder.Entity("Rass.Api.Domain.Entities.RoleApplication", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("AdminNote")
+                        .HasColumnType("text");
+
+                    b.Property<Guid>("ApplicantUserId")
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("FormDataJson")
+                        .HasColumnType("text");
+
+                    b.Property<string>("Status")
+                        .IsRequired()
+                        .HasMaxLength(40)
+                        .HasColumnType("character varying(40)");
+
+                    b.Property<string>("TargetRole")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)");
+
+                    b.Property<DateTime>("UpdatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("ApplicantUserId");
+
+                    b.HasIndex("Status", "UpdatedAt");
+
+                    b.ToTable("RoleApplications");
+                });
+
+            modelBuilder.Entity("Rass.Api.Domain.Entities.RoleApplicationDocument", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("ContentType")
+                        .HasMaxLength(120)
+                        .HasColumnType("character varying(120)");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("DocumentName")
+                        .IsRequired()
+                        .HasMaxLength(200)
+                        .HasColumnType("character varying(200)");
+
+                    b.Property<string>("DocumentUrl")
+                        .IsRequired()
+                        .HasMaxLength(1000)
+                        .HasColumnType("character varying(1000)");
+
+                    b.Property<string>("OriginalFileName")
+                        .HasMaxLength(250)
+                        .HasColumnType("character varying(250)");
+
+                    b.Property<Guid>("RoleApplicationId")
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("UploadedBy")
+                        .IsRequired()
+                        .HasMaxLength(20)
+                        .HasColumnType("character varying(20)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("RoleApplicationId");
+
+                    b.ToTable("RoleApplicationDocuments");
+                });
+
+            modelBuilder.Entity("Rass.Api.Domain.Entities.RoleApplicationMessage", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<bool>("IsReadByAdmin")
+                        .HasColumnType("boolean");
+
+                    b.Property<bool>("IsReadByApplicant")
+                        .HasColumnType("boolean");
+
+                    b.Property<string>("Message")
+                        .IsRequired()
+                        .HasMaxLength(3000)
+                        .HasColumnType("character varying(3000)");
+
+                    b.Property<Guid>("RoleApplicationId")
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("SenderName")
+                        .IsRequired()
+                        .HasMaxLength(200)
+                        .HasColumnType("character varying(200)");
+
+                    b.Property<string>("SenderType")
+                        .IsRequired()
+                        .HasMaxLength(20)
+                        .HasColumnType("character varying(20)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("RoleApplicationId");
+
+                    b.ToTable("RoleApplicationMessages");
+                });
+
+            modelBuilder.Entity("Rass.Api.Domain.Entities.ScheduledTask", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<Guid?>("CreatedBy")
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("CronExpression")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)");
+
+                    b.Property<int>("FailureCount")
+                        .HasColumnType("integer");
+
+                    b.Property<bool>("IsEnabled")
+                        .HasColumnType("boolean");
+
+                    b.Property<DateTime?>("LastRunAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("LastRunResult")
+                        .HasMaxLength(500)
+                        .HasColumnType("character varying(500)");
+
+                    b.Property<string>("LastRunStatus")
+                        .HasMaxLength(30)
+                        .HasColumnType("character varying(30)");
+
+                    b.Property<DateTime?>("NextRunAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("Parameters")
+                        .HasMaxLength(2000)
+                        .HasColumnType("character varying(2000)");
+
+                    b.Property<string>("TaskName")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)");
+
+                    b.Property<string>("TaskType")
+                        .IsRequired()
+                        .HasMaxLength(50)
+                        .HasColumnType("character varying(50)");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("ScheduledTasks");
+                });
+
+            modelBuilder.Entity("Rass.Api.Domain.Entities.SeasonalGuidance", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<Guid>("CreatedBy")
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("Crop")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)");
+
+                    b.Property<decimal?>("ExpectedMaxPrice")
+                        .HasColumnType("numeric");
+
+                    b.Property<decimal?>("ExpectedMinPrice")
+                        .HasColumnType("numeric");
+
+                    b.Property<string>("ExpectedTrend")
+                        .IsRequired()
+                        .HasMaxLength(20)
+                        .HasColumnType("character varying(20)");
+
+                    b.Property<string>("Notes")
+                        .HasMaxLength(1000)
+                        .HasColumnType("character varying(1000)");
+
+                    b.Property<string>("RecommendationForFarmers")
+                        .HasMaxLength(1000)
+                        .HasColumnType("character varying(1000)");
+
+                    b.Property<string>("Region")
+                        .IsRequired()
+                        .HasMaxLength(50)
+                        .HasColumnType("character varying(50)");
+
+                    b.Property<string>("Season")
+                        .IsRequired()
+                        .HasMaxLength(30)
+                        .HasColumnType("character varying(30)");
+
+                    b.Property<DateTime>("StabilityEnd")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<DateTime>("StabilityStart")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("Crop", "Region", "Season");
+
+                    b.ToTable("SeasonalGuidances");
                 });
 
             modelBuilder.Entity("Rass.Api.Domain.Entities.StorageBooking", b =>
@@ -753,6 +1983,56 @@ namespace Rass.Api.Migrations
                     b.ToTable("StorageFacilities");
                 });
 
+            modelBuilder.Entity("Rass.Api.Domain.Entities.SystemConfiguration", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("Category")
+                        .IsRequired()
+                        .HasMaxLength(50)
+                        .HasColumnType("character varying(50)");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("Description")
+                        .HasMaxLength(500)
+                        .HasColumnType("character varying(500)");
+
+                    b.Property<bool>("IsEditable")
+                        .HasColumnType("boolean");
+
+                    b.Property<string>("Key")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)");
+
+                    b.Property<DateTime?>("LastModifiedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<Guid?>("LastModifiedBy")
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("Value")
+                        .IsRequired()
+                        .HasMaxLength(2000)
+                        .HasColumnType("character varying(2000)");
+
+                    b.Property<string>("ValueType")
+                        .IsRequired()
+                        .HasMaxLength(50)
+                        .HasColumnType("character varying(50)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("Key")
+                        .IsUnique();
+
+                    b.ToTable("SystemConfigurations");
+                });
+
             modelBuilder.Entity("Rass.Api.Domain.Entities.Telemetry", b =>
                 {
                     b.Property<Guid>("Id")
@@ -787,6 +2067,186 @@ namespace Rass.Api.Migrations
                     b.HasIndex("TransportRequestId");
 
                     b.ToTable("Telemetries");
+                });
+
+            modelBuilder.Entity("Rass.Api.Domain.Entities.TransportJob", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<Guid?>("AssignedTransporterId")
+                        .HasColumnType("uuid");
+
+                    b.Property<Guid>("CooperativeId")
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("Crop")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)");
+
+                    b.Property<DateTime?>("DeliveryDeadline")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("DeliveryLocation")
+                        .IsRequired()
+                        .HasMaxLength(250)
+                        .HasColumnType("character varying(250)");
+
+                    b.Property<string>("Description")
+                        .HasMaxLength(2000)
+                        .HasColumnType("character varying(2000)");
+
+                    b.Property<double?>("DistanceKm")
+                        .HasColumnType("double precision");
+
+                    b.Property<decimal?>("MaxPaymentRwf")
+                        .HasColumnType("numeric");
+
+                    b.Property<decimal?>("MinPaymentRwf")
+                        .HasColumnType("numeric");
+
+                    b.Property<string>("PaymentTerms")
+                        .IsRequired()
+                        .HasMaxLength(50)
+                        .HasColumnType("character varying(50)");
+
+                    b.Property<DateTime?>("PickupDate")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("PickupLocation")
+                        .IsRequired()
+                        .HasMaxLength(250)
+                        .HasColumnType("character varying(250)");
+
+                    b.Property<Guid>("PostedByUserId")
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("QualityGrade")
+                        .HasMaxLength(50)
+                        .HasColumnType("character varying(50)");
+
+                    b.Property<double>("QuantityKg")
+                        .HasColumnType("double precision");
+
+                    b.Property<string>("RequiredVehicleType")
+                        .HasMaxLength(50)
+                        .HasColumnType("character varying(50)");
+
+                    b.Property<bool>("RequiresColdChain")
+                        .HasColumnType("boolean");
+
+                    b.Property<string>("SpecialInstructions")
+                        .HasMaxLength(1000)
+                        .HasColumnType("character varying(1000)");
+
+                    b.Property<string>("Status")
+                        .IsRequired()
+                        .HasMaxLength(40)
+                        .HasColumnType("character varying(40)");
+
+                    b.Property<string>("Title")
+                        .IsRequired()
+                        .HasMaxLength(200)
+                        .HasColumnType("character varying(200)");
+
+                    b.Property<Guid?>("TransportRequestId")
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTime>("UpdatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("AssignedTransporterId");
+
+                    b.HasIndex("CooperativeId");
+
+                    b.HasIndex("PostedByUserId");
+
+                    b.HasIndex("TransportRequestId");
+
+                    b.HasIndex("Status", "CreatedAt");
+
+                    b.ToTable("TransportJobs");
+                });
+
+            modelBuilder.Entity("Rass.Api.Domain.Entities.TransportJobApplication", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("CoverLetter")
+                        .HasMaxLength(2000)
+                        .HasColumnType("character varying(2000)");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("DriverPhone")
+                        .HasMaxLength(20)
+                        .HasColumnType("character varying(20)");
+
+                    b.Property<string>("DrivingLicenseUrl")
+                        .HasMaxLength(500)
+                        .HasColumnType("character varying(500)");
+
+                    b.Property<int?>("EstimatedDeliveryHours")
+                        .HasColumnType("integer");
+
+                    b.Property<string>("InsuranceDocUrl")
+                        .HasMaxLength(500)
+                        .HasColumnType("character varying(500)");
+
+                    b.Property<string>("PlateNumber")
+                        .HasMaxLength(30)
+                        .HasColumnType("character varying(30)");
+
+                    b.Property<decimal>("ProposedPriceRwf")
+                        .HasColumnType("numeric");
+
+                    b.Property<string>("ReviewNote")
+                        .HasMaxLength(500)
+                        .HasColumnType("character varying(500)");
+
+                    b.Property<string>("Status")
+                        .IsRequired()
+                        .HasMaxLength(40)
+                        .HasColumnType("character varying(40)");
+
+                    b.Property<Guid>("TransportJobId")
+                        .HasColumnType("uuid");
+
+                    b.Property<Guid>("TransporterUserId")
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTime>("UpdatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<double?>("VehicleCapacityKg")
+                        .HasColumnType("double precision");
+
+                    b.Property<string>("VehicleInspectionUrl")
+                        .HasMaxLength(500)
+                        .HasColumnType("character varying(500)");
+
+                    b.Property<string>("VehicleType")
+                        .HasMaxLength(50)
+                        .HasColumnType("character varying(50)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("TransporterUserId");
+
+                    b.HasIndex("TransportJobId", "TransporterUserId")
+                        .IsUnique();
+
+                    b.ToTable("TransportJobApplications");
                 });
 
             modelBuilder.Entity("Rass.Api.Domain.Entities.TransportRequest", b =>
@@ -866,6 +2326,59 @@ namespace Rass.Api.Migrations
                     b.ToTable("TransportRequests");
                 });
 
+            modelBuilder.Entity("Rass.Api.Domain.Entities.TransporterLocation", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<double?>("Accuracy")
+                        .HasColumnType("double precision");
+
+                    b.Property<double?>("Altitude")
+                        .HasColumnType("double precision");
+
+                    b.Property<double?>("DistanceRemainingKm")
+                        .HasColumnType("double precision");
+
+                    b.Property<DateTime?>("EstimatedArrival")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<double?>("Heading")
+                        .HasColumnType("double precision");
+
+                    b.Property<double>("Latitude")
+                        .HasColumnType("double precision");
+
+                    b.Property<double>("Longitude")
+                        .HasColumnType("double precision");
+
+                    b.Property<DateTime>("RecordedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<double?>("Speed")
+                        .HasColumnType("double precision");
+
+                    b.Property<string>("Status")
+                        .IsRequired()
+                        .HasMaxLength(40)
+                        .HasColumnType("character varying(40)");
+
+                    b.Property<Guid>("TransportRequestId")
+                        .HasColumnType("uuid");
+
+                    b.Property<Guid>("TransporterId")
+                        .HasColumnType("uuid");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("TransporterId");
+
+                    b.HasIndex("TransportRequestId", "RecordedAt");
+
+                    b.ToTable("TransporterLocations");
+                });
+
             modelBuilder.Entity("Rass.Api.Domain.Entities.TransporterProfile", b =>
                 {
                     b.Property<Guid>("Id")
@@ -930,6 +2443,9 @@ namespace Rass.Api.Migrations
                         .ValueGeneratedOnAdd()
                         .HasColumnType("uuid");
 
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("timestamp with time zone");
+
                     b.Property<string>("Email")
                         .IsRequired()
                         .HasMaxLength(200)
@@ -943,10 +2459,65 @@ namespace Rass.Api.Migrations
                     b.Property<bool>("IsActive")
                         .HasColumnType("boolean");
 
+                    b.Property<DateTime?>("LastLogin")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<bool>("NotifyEmail")
+                        .HasColumnType("boolean");
+
+                    b.Property<bool>("NotifyInApp")
+                        .HasColumnType("boolean");
+
+                    b.Property<bool>("NotifyMarketing")
+                        .HasColumnType("boolean");
+
+                    b.Property<bool>("NotifySecurityAlerts")
+                        .HasColumnType("boolean");
+
                     b.Property<string>("PasswordHash")
                         .IsRequired()
                         .HasMaxLength(400)
                         .HasColumnType("character varying(400)");
+
+                    b.Property<string>("PendingEmail")
+                        .HasMaxLength(200)
+                        .HasColumnType("character varying(200)");
+
+                    b.Property<DateTime?>("PendingEmailOtpExpiry")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("PendingEmailOtpHash")
+                        .HasMaxLength(200)
+                        .HasColumnType("character varying(200)");
+
+                    b.Property<string>("PendingPhone")
+                        .HasMaxLength(50)
+                        .HasColumnType("character varying(50)");
+
+                    b.Property<DateTime?>("PendingPhoneOtpExpiry")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("PendingPhoneOtpHash")
+                        .HasMaxLength(200)
+                        .HasColumnType("character varying(200)");
+
+                    b.Property<string>("PhoneNumber")
+                        .HasMaxLength(50)
+                        .HasColumnType("character varying(50)");
+
+                    b.Property<string>("ResetOtp")
+                        .HasMaxLength(200)
+                        .HasColumnType("character varying(200)");
+
+                    b.Property<DateTime?>("ResetOtpExpiry")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<bool>("TwoFactorEnabled")
+                        .HasColumnType("boolean");
+
+                    b.Property<string>("TwoFactorSecret")
+                        .HasMaxLength(200)
+                        .HasColumnType("character varying(200)");
 
                     b.HasKey("Id");
 
@@ -1077,6 +2648,70 @@ namespace Rass.Api.Migrations
                     b.Navigation("Manager");
                 });
 
+            modelBuilder.Entity("Rass.Api.Domain.Entities.CropCatalog", b =>
+                {
+                    b.HasOne("Rass.Api.Domain.Entities.User", "CreatedByUser")
+                        .WithMany()
+                        .HasForeignKey("CreatedByUserId");
+
+                    b.Navigation("CreatedByUser");
+                });
+
+            modelBuilder.Entity("Rass.Api.Domain.Entities.CropShareBid", b =>
+                {
+                    b.HasOne("Rass.Api.Domain.Entities.CropShareRequest", "CropShareRequest")
+                        .WithMany("Bids")
+                        .HasForeignKey("CropShareRequestId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("Rass.Api.Domain.Entities.Cooperative", "SupplierCooperative")
+                        .WithMany()
+                        .HasForeignKey("SupplierCooperativeId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.Navigation("CropShareRequest");
+
+                    b.Navigation("SupplierCooperative");
+                });
+
+            modelBuilder.Entity("Rass.Api.Domain.Entities.CropShareRequest", b =>
+                {
+                    b.HasOne("Rass.Api.Domain.Entities.Cooperative", "RequesterCooperative")
+                        .WithMany()
+                        .HasForeignKey("RequesterCooperativeId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("Rass.Api.Domain.Entities.Cooperative", "SupplierCooperative")
+                        .WithMany()
+                        .HasForeignKey("SupplierCooperativeId")
+                        .OnDelete(DeleteBehavior.Restrict);
+
+                    b.HasOne("Rass.Api.Domain.Entities.Cooperative", "TargetCooperative")
+                        .WithMany()
+                        .HasForeignKey("TargetCooperativeId")
+                        .OnDelete(DeleteBehavior.Restrict);
+
+                    b.Navigation("RequesterCooperative");
+
+                    b.Navigation("SupplierCooperative");
+
+                    b.Navigation("TargetCooperative");
+                });
+
+            modelBuilder.Entity("Rass.Api.Domain.Entities.DeliveryTrackingInfo", b =>
+                {
+                    b.HasOne("Rass.Api.Domain.Entities.TransportRequest", "TransportRequest")
+                        .WithMany()
+                        .HasForeignKey("TransportRequestId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("TransportRequest");
+                });
+
             modelBuilder.Entity("Rass.Api.Domain.Entities.Farmer", b =>
                 {
                     b.HasOne("Rass.Api.Domain.Entities.Cooperative", "Cooperative")
@@ -1122,6 +2757,17 @@ namespace Rass.Api.Migrations
                     b.Navigation("Farmer");
                 });
 
+            modelBuilder.Entity("Rass.Api.Domain.Entities.ListingImage", b =>
+                {
+                    b.HasOne("Rass.Api.Domain.Entities.MarketListing", "MarketListing")
+                        .WithMany("Images")
+                        .HasForeignKey("MarketListingId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("MarketListing");
+                });
+
             modelBuilder.Entity("Rass.Api.Domain.Entities.Lot", b =>
                 {
                     b.HasOne("Rass.Api.Domain.Entities.Cooperative", "Cooperative")
@@ -1132,9 +2778,34 @@ namespace Rass.Api.Migrations
                         .WithMany("Lots")
                         .HasForeignKey("FarmerId");
 
+                    b.HasOne("Rass.Api.Domain.Entities.StorageFacility", "StorageFacility")
+                        .WithMany()
+                        .HasForeignKey("StorageFacilityId");
+
                     b.Navigation("Cooperative");
 
                     b.Navigation("Farmer");
+
+                    b.Navigation("StorageFacility");
+                });
+
+            modelBuilder.Entity("Rass.Api.Domain.Entities.LotContribution", b =>
+                {
+                    b.HasOne("Rass.Api.Domain.Entities.Farmer", "Farmer")
+                        .WithMany()
+                        .HasForeignKey("FarmerId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("Rass.Api.Domain.Entities.Lot", "Lot")
+                        .WithMany("Contributions")
+                        .HasForeignKey("LotId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Farmer");
+
+                    b.Navigation("Lot");
                 });
 
             modelBuilder.Entity("Rass.Api.Domain.Entities.MarketListing", b =>
@@ -1154,7 +2825,13 @@ namespace Rass.Api.Migrations
                         .WithMany()
                         .HasForeignKey("AgentId");
 
+                    b.HasOne("Rass.Api.Domain.Entities.RegisteredMarket", "RegisteredMarket")
+                        .WithMany()
+                        .HasForeignKey("RegisteredMarketId");
+
                     b.Navigation("Agent");
+
+                    b.Navigation("RegisteredMarket");
                 });
 
             modelBuilder.Entity("Rass.Api.Domain.Entities.Notification", b =>
@@ -1175,6 +2852,66 @@ namespace Rass.Api.Migrations
                         .HasForeignKey("ContractId");
 
                     b.Navigation("Contract");
+                });
+
+            modelBuilder.Entity("Rass.Api.Domain.Entities.PlatformAlert", b =>
+                {
+                    b.HasOne("Rass.Api.Domain.Entities.User", "RelatedUser")
+                        .WithMany()
+                        .HasForeignKey("RelatedUserId");
+
+                    b.Navigation("RelatedUser");
+                });
+
+            modelBuilder.Entity("Rass.Api.Domain.Entities.PriceRegulation", b =>
+                {
+                    b.HasOne("Rass.Api.Domain.Entities.User", "CreatedByUser")
+                        .WithMany()
+                        .HasForeignKey("CreatedByUserId");
+
+                    b.Navigation("CreatedByUser");
+                });
+
+            modelBuilder.Entity("Rass.Api.Domain.Entities.RegisteredMarket", b =>
+                {
+                    b.HasOne("Rass.Api.Domain.Entities.User", "CreatedByUser")
+                        .WithMany()
+                        .HasForeignKey("CreatedByUserId");
+
+                    b.Navigation("CreatedByUser");
+                });
+
+            modelBuilder.Entity("Rass.Api.Domain.Entities.RoleApplication", b =>
+                {
+                    b.HasOne("Rass.Api.Domain.Entities.User", "ApplicantUser")
+                        .WithMany()
+                        .HasForeignKey("ApplicantUserId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("ApplicantUser");
+                });
+
+            modelBuilder.Entity("Rass.Api.Domain.Entities.RoleApplicationDocument", b =>
+                {
+                    b.HasOne("Rass.Api.Domain.Entities.RoleApplication", "RoleApplication")
+                        .WithMany("Documents")
+                        .HasForeignKey("RoleApplicationId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("RoleApplication");
+                });
+
+            modelBuilder.Entity("Rass.Api.Domain.Entities.RoleApplicationMessage", b =>
+                {
+                    b.HasOne("Rass.Api.Domain.Entities.RoleApplication", "RoleApplication")
+                        .WithMany("Messages")
+                        .HasForeignKey("RoleApplicationId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("RoleApplication");
                 });
 
             modelBuilder.Entity("Rass.Api.Domain.Entities.StorageBooking", b =>
@@ -1215,6 +2952,56 @@ namespace Rass.Api.Migrations
                     b.Navigation("TransportRequest");
                 });
 
+            modelBuilder.Entity("Rass.Api.Domain.Entities.TransportJob", b =>
+                {
+                    b.HasOne("Rass.Api.Domain.Entities.User", "AssignedTransporter")
+                        .WithMany()
+                        .HasForeignKey("AssignedTransporterId");
+
+                    b.HasOne("Rass.Api.Domain.Entities.Cooperative", "Cooperative")
+                        .WithMany()
+                        .HasForeignKey("CooperativeId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("Rass.Api.Domain.Entities.User", "PostedByUser")
+                        .WithMany()
+                        .HasForeignKey("PostedByUserId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("Rass.Api.Domain.Entities.TransportRequest", "TransportRequest")
+                        .WithMany()
+                        .HasForeignKey("TransportRequestId");
+
+                    b.Navigation("AssignedTransporter");
+
+                    b.Navigation("Cooperative");
+
+                    b.Navigation("PostedByUser");
+
+                    b.Navigation("TransportRequest");
+                });
+
+            modelBuilder.Entity("Rass.Api.Domain.Entities.TransportJobApplication", b =>
+                {
+                    b.HasOne("Rass.Api.Domain.Entities.TransportJob", "TransportJob")
+                        .WithMany("Applications")
+                        .HasForeignKey("TransportJobId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("Rass.Api.Domain.Entities.User", "TransporterUser")
+                        .WithMany()
+                        .HasForeignKey("TransporterUserId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("TransportJob");
+
+                    b.Navigation("TransporterUser");
+                });
+
             modelBuilder.Entity("Rass.Api.Domain.Entities.TransportRequest", b =>
                 {
                     b.HasOne("Rass.Api.Domain.Entities.Contract", "Contract")
@@ -1226,6 +3013,25 @@ namespace Rass.Api.Migrations
                         .HasForeignKey("TransporterId");
 
                     b.Navigation("Contract");
+
+                    b.Navigation("Transporter");
+                });
+
+            modelBuilder.Entity("Rass.Api.Domain.Entities.TransporterLocation", b =>
+                {
+                    b.HasOne("Rass.Api.Domain.Entities.TransportRequest", "TransportRequest")
+                        .WithMany()
+                        .HasForeignKey("TransportRequestId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("Rass.Api.Domain.Entities.TransporterProfile", "Transporter")
+                        .WithMany()
+                        .HasForeignKey("TransporterId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("TransportRequest");
 
                     b.Navigation("Transporter");
                 });
@@ -1290,6 +3096,11 @@ namespace Rass.Api.Migrations
                     b.Navigation("MarketListings");
                 });
 
+            modelBuilder.Entity("Rass.Api.Domain.Entities.CropShareRequest", b =>
+                {
+                    b.Navigation("Bids");
+                });
+
             modelBuilder.Entity("Rass.Api.Domain.Entities.Farmer", b =>
                 {
                     b.Navigation("HarvestDeclarations");
@@ -1300,11 +3111,15 @@ namespace Rass.Api.Migrations
             modelBuilder.Entity("Rass.Api.Domain.Entities.Lot", b =>
                 {
                     b.Navigation("ContractLots");
+
+                    b.Navigation("Contributions");
                 });
 
             modelBuilder.Entity("Rass.Api.Domain.Entities.MarketListing", b =>
                 {
                     b.Navigation("BuyerOrders");
+
+                    b.Navigation("Images");
                 });
 
             modelBuilder.Entity("Rass.Api.Domain.Entities.Role", b =>
@@ -1312,9 +3127,21 @@ namespace Rass.Api.Migrations
                     b.Navigation("UserRoles");
                 });
 
+            modelBuilder.Entity("Rass.Api.Domain.Entities.RoleApplication", b =>
+                {
+                    b.Navigation("Documents");
+
+                    b.Navigation("Messages");
+                });
+
             modelBuilder.Entity("Rass.Api.Domain.Entities.StorageFacility", b =>
                 {
                     b.Navigation("Bookings");
+                });
+
+            modelBuilder.Entity("Rass.Api.Domain.Entities.TransportJob", b =>
+                {
+                    b.Navigation("Applications");
                 });
 
             modelBuilder.Entity("Rass.Api.Domain.Entities.TransporterProfile", b =>

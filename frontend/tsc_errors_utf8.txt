@@ -1,0 +1,36 @@
+﻿src/components/ChatWidget.tsx(252,42): error TS2769: No overload matches this call.
+  Overload 1 of 2, '(props: { component: ElementType<any, keyof IntrinsicElements>; } & ListItemOwnProps & CommonProps & Omit<any, "children" | ... 15 more ... | "secondaryAction">): Element | null', gave the following error.
+    Property 'component' is missing in type '{ children: Element[]; key: string; button: true; onClick: () => void; sx: { borderRadius: number; mb: number; }; }' but required in type '{ component: ElementType<any, keyof IntrinsicElements>; }'.
+  Overload 2 of 2, '(props: DefaultComponentProps<ListItemTypeMap<{}, "li">>): Element | null', gave the following error.
+    Type '{ children: Element[]; key: string; button: true; onClick: () => void; sx: { borderRadius: number; mb: number; }; }' is not assignable to type 'IntrinsicAttributes & ListItemOwnProps & CommonProps & Omit<DetailedHTMLProps<LiHTMLAttributes<HTMLLIElement>, HTMLLIElement>, "children" | ... 15 more ... | "secondaryAction">'.
+      Property 'button' does not exist on type 'IntrinsicAttributes & ListItemOwnProps & CommonProps & Omit<DetailedHTMLProps<LiHTMLAttributes<HTMLLIElement>, HTMLLIElement>, "children" | ... 15 more ... | "secondaryAction">'.
+src/pages/AdminPage.tsx(7,15): error TS2305: Module '"../types"' has no exported member 'User'.
+src/pages/AdminPage.tsx(156,9): error TS6133: 'handleSuspendUser' is declared but its value is never read.
+src/pages/BuyerDashboardPage.tsx(5,1): error TS6133: 'DataTable' is declared but its value is never read.
+src/pages/BuyerDashboardPage.tsx(13,10): error TS6133: 'payments' is declared but its value is never read.
+src/pages/BuyerDashboardPage.tsx(13,20): error TS6133: 'setPayments' is declared but its value is never read.
+src/pages/BuyerDashboardPage.tsx(492,58): error TS2551: Property 'contract' does not exist on type 'BuyerOrder'. Did you mean 'contracts'?
+src/pages/BuyerDashboardPage.tsx(504,26): error TS2551: Property 'contract' does not exist on type 'BuyerOrder'. Did you mean 'contracts'?
+src/pages/BuyerDashboardPage.tsx(506,88): error TS2551: Property 'contract' does not exist on type 'BuyerOrder'. Did you mean 'contracts'?
+src/pages/BuyerDashboardPage.tsx(507,86): error TS2551: Property 'contract' does not exist on type 'BuyerOrder'. Did you mean 'contracts'?
+src/pages/CooperativeDashboardPage.tsx(15,10): error TS6133: 'transporters' is declared but its value is never read.
+src/pages/CooperativeDashboardPage.tsx(15,24): error TS6133: 'setTransporters' is declared but its value is never read.
+src/pages/CooperativeDashboardPage.tsx(23,10): error TS6133: 'showStorageModal' is declared but its value is never read.
+src/pages/CooperativeDashboardPage.tsx(24,10): error TS6133: 'showTransporterModal' is declared but its value is never read.
+src/pages/CooperativeDashboardPage.tsx(25,10): error TS6133: 'showPaymentModal' is declared but its value is never read.
+src/pages/CooperativeDashboardPage.tsx(195,29): error TS6133: 'farmer' is declared but its value is never read.
+src/pages/CooperativeDashboardPage.tsx(200,41): error TS6133: 'farmer' is declared but its value is never read.
+src/pages/CooperativeDashboardPage.tsx(313,9): error TS6133: 'handleAssignStorage' is declared but its value is never read.
+src/pages/CooperativeDashboardPage.tsx(328,9): error TS6133: 'handleAssignTransporter' is declared but its value is never read.
+src/pages/CooperativeDashboardPage.tsx(342,9): error TS6133: 'handleSettlePayments' is declared but its value is never read.
+src/pages/CooperativeDashboardPage.tsx(574,40): error TS2353: Object literal may only specify known properties, and 'farmerId' does not exist in type 'SetStateAction<{ crop: string; quantityKg: string; qualityGrade: string; storageLocation: string; }>'.
+src/pages/CooperativeManagementPage.tsx(4,1): error TS6133: 'Modal' is declared but its value is never read.
+src/pages/DashboardPage.tsx(3,15): error TS6133: 'Stack' is declared but its value is never read.
+src/pages/DashboardPage.tsx(7,11): error TS6133: 'user' is declared but its value is never read.
+src/pages/GovernmentDashboardPage.tsx(4,1): error TS6133: 'MarketPrice' is declared but its value is never read.
+src/pages/MarketplacePage.tsx(64,24): error TS6133: 'setFilterRegion' is declared but its value is never read.
+src/pages/MarketplacePage.tsx(65,22): error TS6133: 'setFilterCrop' is declared but its value is never read.
+src/pages/MarketplacePage.tsx(113,32): error TS6133: 'cooperativeId' is declared but its value is never read.
+src/pages/TrackingPage.tsx(42,94): error TS2339: Property 'market' does not exist on type '{ crop: string; deliveryLocation: string; deliveryWindowStart: string; deliveryWindowEnd: string; }'.
+src/pages/TransporterDashboardPage.tsx(92,34): error TS6133: 'job' is declared but its value is never read.
+src/pages/TransporterDashboardPage.tsx(130,9): error TS6133: 'handleConfirmDelivery' is declared but its value is never read.

@@ -16,32 +16,31 @@ public class MarketPricesController : ControllerBase
 {
     private readonly AppDbContext _db;
     private readonly ForecastingService _forecastingService;
+    private readonly CatalogManagementService _catalog;
 
-    public MarketPricesController(AppDbContext db, ForecastingService forecastingService)
+    public MarketPricesController(AppDbContext db, ForecastingService forecastingService, CatalogManagementService catalog)
     {
         _db = db;
         _forecastingService = forecastingService;
+        _catalog = catalog;
     }
 
     [HttpGet]
     [AllowAnonymous]
-    public async Task<IActionResult> Get([FromQuery] string? crop, [FromQuery] string? market)
+    public async Task<IActionResult> Get([FromQuery] string? crop, [FromQuery] string? market, [FromQuery] string? region)
     {
         var query = _db.MarketPrices.AsQueryable();
 
         if (!string.IsNullOrWhiteSpace(crop))
-        {
             query = query.Where(p => p.Crop == crop);
-        }
-
         if (!string.IsNullOrWhiteSpace(market))
-        {
             query = query.Where(p => p.Market == market);
-        }
+        if (!string.IsNullOrWhiteSpace(region))
+            query = query.Where(p => p.Region == region);
 
         var prices = await query
             .OrderByDescending(p => p.ObservedAt)
-            .Take(50)
+            .Take(100)
             .ToListAsync();
 
         return Ok(prices);
@@ -51,8 +50,9 @@ public class MarketPricesController : ControllerBase
     [AllowAnonymous]
     public async Task<IActionResult> GetLatest()
     {
-        // Get latest price per crop-market combination
+        // Get latest approved price per crop-market combination
         var allPrices = await _db.MarketPrices
+            .Where(p => p.VerificationStatus == "Approved")
             .OrderByDescending(p => p.ObservedAt)
             .ToListAsync();
 
@@ -67,16 +67,34 @@ public class MarketPricesController : ControllerBase
     }
 
     [HttpPost]
-    [Authorize(Roles = "MarketAgent,Admin")]
+    [Authorize(Policy = "MarketMonitoring")]
     public async Task<IActionResult> SubmitPrice(SubmitMarketPriceRequest request)
     {
         var agentId = GetUserId();
+        var market = await _catalog.FindMarketAsync(request.Market);
+        if (market == null)
+            return BadRequest("Select a registered market before submitting a price.");
+
+        string cropName;
+        try
+        {
+            cropName = await _catalog.EnsureCropAsync(request.Crop, agentId, User.IsInRole("Government") ? "Government" : "MarketAgent", User.IsInRole("Government") || User.IsInRole("Admin"));
+        }
+        catch (InvalidOperationException ex)
+        {
+            return BadRequest(ex.Message);
+        }
 
         var price = new MarketPrice
         {
             Id = Guid.NewGuid(),
-            Market = request.Market,
-            Crop = request.Crop,
+            RegisteredMarketId = market.Id,
+            Market = market.Name,
+            Region = market.Province,
+            District = market.District,
+            Sector = market.Sector,
+            Cell = market.Cell,
+            Crop = cropName,
             PricePerKg = request.PricePerKg,
             ObservedAt = request.ObservedAt ?? DateTime.UtcNow,
             AgentId = agentId
@@ -89,7 +107,7 @@ public class MarketPricesController : ControllerBase
     }
 
     [HttpGet("forecast/{crop}/{market}")]
-    [AllowAnonymous]
+    [Authorize(Policy = "ForecastViewer")]
     public async Task<IActionResult> GetPriceForecast(string crop, string market, [FromQuery] int days = 7)
     {
         // Get historical prices for the crop and market
@@ -120,7 +138,7 @@ public class MarketPricesController : ControllerBase
     }
 
     [HttpPost("detect-anomaly")]
-    [Authorize(Roles = "MarketAgent,Admin")]
+    [Authorize(Policy = "MarketMonitoring")]
     public async Task<IActionResult> DetectAnomaly([FromBody] AnomalyDetectionRequest request)
     {
         var historicalPrices = await _db.MarketPrices

@@ -3007,19 +3007,19 @@
     ]
   },
   "packageFolders": {
-    "C:\\Users\\TRIGGA\\.nuget\\packages\\": {}
+    "/Users/test/.nuget/packages/": {}
   },
   "project": {
     "version": "1.0.0",
     "restore": {
-      "projectUniqueName": "D:\\Desktop\\AUCA\\FINAL YEAR PROJECT\\RASS\\backend\\Rass.Api.csproj",
+      "projectUniqueName": "/Users/test/Documents/NEWERA/AUCA/FINAL YEAR PROJECT/RASS/backend/Rass.Api.csproj",
       "projectName": "Rass.Api",
-      "projectPath": "D:\\Desktop\\AUCA\\FINAL YEAR PROJECT\\RASS\\backend\\Rass.Api.csproj",
-      "packagesPath": "C:\\Users\\TRIGGA\\.nuget\\packages\\",
-      "outputPath": "D:\\Desktop\\AUCA\\FINAL YEAR PROJECT\\RASS\\backend\\obj\\",
+      "projectPath": "/Users/test/Documents/NEWERA/AUCA/FINAL YEAR PROJECT/RASS/backend/Rass.Api.csproj",
+      "packagesPath": "/Users/test/.nuget/packages/",
+      "outputPath": "/Users/test/Documents/NEWERA/AUCA/FINAL YEAR PROJECT/RASS/backend/obj/",
       "projectStyle": "PackageReference",
       "configFilePaths": [
-        "C:\\Users\\TRIGGA\\AppData\\Roaming\\NuGet\\NuGet.Config"
+        "/Users/test/.nuget/NuGet/NuGet.Config"
       ],
       "originalTargetFrameworks": [
         "net10.0"
@@ -3105,7 +3105,7 @@
             "privateAssets": "all"
           }
         },
-        "runtimeIdentifierGraphPath": "C:\\Program Files\\dotnet\\sdk\\10.0.101/PortableRuntimeIdentifierGraph.json",
+        "runtimeIdentifierGraphPath": "/usr/local/share/dotnet/sdk/10.0.103/PortableRuntimeIdentifierGraph.json",
         "packagesToPrune": {
           "Microsoft.AspNetCore": "(,10.0.32767]",
           "Microsoft.AspNetCore.Antiforgery": "(,10.0.32767]",

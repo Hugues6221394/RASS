@@ -32,4 +32,6 @@ public class MarketListing
     public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
 
     public ICollection<BuyerOrder> BuyerOrders { get; set; } = new List<BuyerOrder>();
+    
+    public ICollection<ListingImage> Images { get; set; } = new List<ListingImage>();
 }

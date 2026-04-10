@@ -24,16 +24,21 @@ public class MarketListingsController : ControllerBase
     public async Task<IActionResult> GetAllListings(
         [FromQuery] string? crop,
         [FromQuery] string? region,
+        [FromQuery] string? district,
+        [FromQuery] string? sector,
         [FromQuery] string? quality,
         [FromQuery] double? minQuantity,
         [FromQuery] decimal? maxPrice,
+        [FromQuery] bool includeExpired = false,
         [FromQuery] int skip = 0,
         [FromQuery] int take = 20)
     {
         var query = _db.MarketListings
             .Include(l => l.Cooperative)
-            .Where(l => l.Status == "Active" && 
-                        l.AvailabilityWindowEnd > DateTime.UtcNow);
+            .Where(l => l.Status == "Active");
+
+        if (!includeExpired)
+            query = query.Where(l => l.AvailabilityWindowEnd > DateTime.UtcNow);
 
         // Apply filters
         if (!string.IsNullOrEmpty(crop))
@@ -41,6 +46,12 @@ public class MarketListingsController : ControllerBase
 
         if (!string.IsNullOrEmpty(region))
             query = query.Where(l => l.Cooperative!.Region.ToLower().Contains(region.ToLower()));
+
+        if (!string.IsNullOrEmpty(district))
+            query = query.Where(l => l.Cooperative!.District.ToLower().Contains(district.ToLower()));
+
+        if (!string.IsNullOrEmpty(sector))
+            query = query.Where(l => l.Cooperative!.Sector.ToLower().Contains(sector.ToLower()));
 
         if (!string.IsNullOrEmpty(quality))
             query = query.Where(l => l.QualityGrade == quality);
@@ -53,7 +64,7 @@ public class MarketListingsController : ControllerBase
 
         var totalCount = await query.CountAsync();
 
-        var listings = await query
+        var rows = await query
             .OrderByDescending(l => l.CreatedAt)
             .Skip(skip)
             .Take(take)
@@ -68,17 +79,43 @@ public class MarketListingsController : ControllerBase
                 l.AvailabilityWindowStart,
                 l.AvailabilityWindowEnd,
                 l.CreatedAt,
+                Images = l.Images.OrderBy(i => i.DisplayOrder).Select(i => i.ImageUrl).ToList(),
+                PrimaryImage = l.Images.OrderBy(i => i.DisplayOrder).Select(i => i.ImageUrl).FirstOrDefault(),
                 Cooperative = new
                 {
                     l.Cooperative!.Id,
                     l.Cooperative.Name,
                     l.Cooperative.Region,
                     l.Cooperative.District,
+                    l.Cooperative.Sector,
+                    l.Cooperative.Cell,
                     l.Cooperative.Location,
                     l.Cooperative.IsVerified
                 }
             })
             .ToListAsync();
+
+        var listings = rows.Select(l =>
+        {
+            var metadata = ParseStructuredListingMetadata(l.Description);
+            return new
+            {
+                l.Id,
+                l.Crop,
+                l.QuantityKg,
+                l.MinimumPrice,
+                l.QualityGrade,
+                Description = metadata.Description,
+                Location = metadata.Location,
+                MarketPriceReference = metadata.MarketPriceReference,
+                l.AvailabilityWindowStart,
+                l.AvailabilityWindowEnd,
+                l.CreatedAt,
+                l.Images,
+                l.PrimaryImage,
+                l.Cooperative
+            };
+        }).ToList();
 
         return Ok(new
         {
@@ -93,13 +130,16 @@ public class MarketListingsController : ControllerBase
     /// </summary>
     [HttpGet("featured")]
     [AllowAnonymous]
-    public async Task<IActionResult> GetFeaturedListings([FromQuery] int count = 8)
+    public async Task<IActionResult> GetFeaturedListings([FromQuery] int count = 8, [FromQuery] bool includeExpired = false)
     {
-        var listings = await _db.MarketListings
+        var featuredQuery = _db.MarketListings
             .Include(l => l.Cooperative)
-            .Where(l => l.Status == "Active" && 
-                        l.AvailabilityWindowEnd > DateTime.UtcNow &&
-                        l.Cooperative!.IsVerified)
+            .Where(l => l.Status == "Active");
+
+        if (!includeExpired)
+            featuredQuery = featuredQuery.Where(l => l.AvailabilityWindowEnd > DateTime.UtcNow);
+
+        var rows = await featuredQuery
             .OrderByDescending(l => l.QuantityKg) // Feature listings with more stock
             .ThenByDescending(l => l.CreatedAt)
             .Take(count)
@@ -113,15 +153,41 @@ public class MarketListingsController : ControllerBase
                 l.Description,
                 l.AvailabilityWindowStart,
                 l.AvailabilityWindowEnd,
+                Images = l.Images.OrderBy(i => i.DisplayOrder).Select(i => i.ImageUrl).ToList(),
+                PrimaryImage = l.Images.OrderBy(i => i.DisplayOrder).Select(i => i.ImageUrl).FirstOrDefault(),
                 Cooperative = new
                 {
                     l.Cooperative!.Id,
                     l.Cooperative.Name,
                     l.Cooperative.Region,
+                    l.Cooperative.District,
+                    l.Cooperative.Sector,
+                    l.Cooperative.Cell,
                     l.Cooperative.IsVerified
                 }
             })
             .ToListAsync();
+
+        var listings = rows.Select(l =>
+        {
+            var metadata = ParseStructuredListingMetadata(l.Description);
+            return new
+            {
+                l.Id,
+                l.Crop,
+                l.QuantityKg,
+                l.MinimumPrice,
+                l.QualityGrade,
+                Description = metadata.Description,
+                Location = metadata.Location,
+                MarketPriceReference = metadata.MarketPriceReference,
+                l.AvailabilityWindowStart,
+                l.AvailabilityWindowEnd,
+                l.Images,
+                l.PrimaryImage,
+                l.Cooperative
+            };
+        }).ToList();
 
         return Ok(listings);
     }
@@ -133,9 +199,9 @@ public class MarketListingsController : ControllerBase
     [AllowAnonymous]
     public async Task<IActionResult> GetListing(Guid id)
     {
-        var listing = await _db.MarketListings
+        var row = await _db.MarketListings
             .Include(l => l.Cooperative)
-            .Where(l => l.Id == id)
+            .Where(l => l.Id == id && l.Status == "Active")
             .Select(l => new
             {
                 l.Id,
@@ -148,12 +214,15 @@ public class MarketListingsController : ControllerBase
                 l.AvailabilityWindowEnd,
                 l.Status,
                 l.CreatedAt,
+                Images = l.Images.OrderBy(i => i.DisplayOrder).Select(i => new { i.Id, i.ImageUrl, i.DisplayOrder }).ToList(),
                 Cooperative = new
                 {
                     l.Cooperative!.Id,
                     l.Cooperative.Name,
                     l.Cooperative.Region,
                     l.Cooperative.District,
+                    l.Cooperative.Sector,
+                    l.Cooperative.Cell,
                     l.Cooperative.Location,
                     l.Cooperative.Phone,
                     l.Cooperative.Email,
@@ -162,7 +231,27 @@ public class MarketListingsController : ControllerBase
             })
             .FirstOrDefaultAsync();
 
-        if (listing == null) return NotFound();
+        if (row == null) return NotFound();
+
+        var metadata = ParseStructuredListingMetadata(row.Description);
+
+        var listing = new
+        {
+            row.Id,
+            row.Crop,
+            row.QuantityKg,
+            row.MinimumPrice,
+            row.QualityGrade,
+            Description = metadata.Description,
+            Location = metadata.Location,
+            MarketPriceReference = metadata.MarketPriceReference,
+            row.AvailabilityWindowStart,
+            row.AvailabilityWindowEnd,
+            row.Status,
+            row.CreatedAt,
+            row.Images,
+            row.Cooperative
+        };
 
         return Ok(listing);
     }
@@ -200,5 +289,45 @@ public class MarketListingsController : ControllerBase
             .ToListAsync();
 
         return Ok(regions);
+    }
+
+    private static (decimal? MarketPriceReference, string? Location, string Description) ParseStructuredListingMetadata(string? rawDescription)
+    {
+        var value = rawDescription ?? string.Empty;
+        decimal? marketPriceReference = null;
+        string? location = null;
+        var description = value;
+
+        if (value.StartsWith("MarketRef:", StringComparison.OrdinalIgnoreCase))
+        {
+            var firstSeparator = value.IndexOf(';');
+            if (firstSeparator > "MarketRef:".Length)
+            {
+                var marketRefValue = value.Substring("MarketRef:".Length, firstSeparator - "MarketRef:".Length);
+                if (decimal.TryParse(marketRefValue, out var parsedMarketRef))
+                {
+                    marketPriceReference = parsedMarketRef;
+                }
+
+                description = value[(firstSeparator + 1)..];
+            }
+        }
+
+        if (description.StartsWith("Location:", StringComparison.OrdinalIgnoreCase))
+        {
+            var secondSeparator = description.IndexOf(';');
+            if (secondSeparator > "Location:".Length)
+            {
+                location = description.Substring("Location:".Length, secondSeparator - "Location:".Length).Trim();
+                description = description[(secondSeparator + 1)..];
+            }
+            else
+            {
+                location = description["Location:".Length..].Trim();
+                description = string.Empty;
+            }
+        }
+
+        return (marketPriceReference, location, description.Trim());
     }
 }

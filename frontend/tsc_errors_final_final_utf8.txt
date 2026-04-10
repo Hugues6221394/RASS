@@ -1,0 +1,2 @@
+﻿src/pages/TransporterDashboardPage.tsx(92,34): error TS6133: 'job' is declared but its value is never read.
+src/pages/TransporterDashboardPage.tsx(130,9): error TS6133: 'handleConfirmDelivery' is declared but its value is never read.

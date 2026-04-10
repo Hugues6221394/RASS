@@ -23,12 +23,14 @@ pip install -r requirements.txt
 ## Running the Service
 
 ```bash
+export FORECASTING_API_KEY="dev-forecast-key-change-me"
 python main.py
 ```
 
 Or with uvicorn:
 
 ```bash
+export FORECASTING_API_KEY="dev-forecast-key-change-me"
 uvicorn main:app --host 0.0.0.0 --port 8001 --reload
 ```
 
@@ -120,13 +122,21 @@ var forecast = await _forecastingService.GetPriceForecastAsync(
 );
 ```
 
+Set the same API key in both services:
+
+- Forecasting service env var: `FORECASTING_API_KEY`
+- Backend config: `ForecastingService:ApiKey` in `backend/appsettings.json`
+
 ## Forecasting Methods
 
 ### Price Forecasting
-- Uses linear trend analysis
-- Seasonal adjustments based on day of year
+- CPU‑friendly ensemble:
+  - Holt‑Linear baseline
+  - SARIMA (statsmodels) for seasonal signal
+  - Gradient Boosting for nonlinear corrections
+- Seasonal adjustments based on Rwanda seasons
 - Statistical uncertainty bounds (80% confidence intervals)
-- Generates actionable recommendations (Sell Now/Hold/Monitor)
+- Actionable recommendations (Sell Now/Hold/Monitor)
 
 ### Supply Forecasting
 - Aggregates expected harvests from farmers
@@ -173,8 +183,6 @@ docker run -p 8001:8001 rass-forecasting
 
 ## Notes
 
-- This version uses pure Python statistical methods (no Prophet dependency)
-- Works on Windows without C compilers
-- Provides same API interface as Prophet-based version
-- Suitable for production use with real historical data
-- Can be upgraded to Prophet later if needed
+- Default stack is CPU‑friendly and runs on a 2017 MacBook Pro (i7, 16GB).
+- Optional heavy libraries (Prophet, XGBoost, LightGBM, PyTorch, TensorFlow, Darts, Kats) are not installed by default.
+- Same API interface as heavier model stacks; you can upgrade later if needed.

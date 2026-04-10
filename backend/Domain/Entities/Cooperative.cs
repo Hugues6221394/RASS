@@ -15,6 +15,12 @@ public class Cooperative
     [MaxLength(100)]
     public string District { get; set; } = string.Empty;
 
+    [MaxLength(100)]
+    public string Sector { get; set; } = string.Empty;
+
+    [MaxLength(100)]
+    public string? Cell { get; set; }
+
     [MaxLength(200)]
     public string Location { get; set; } = string.Empty;
 

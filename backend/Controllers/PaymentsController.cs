@@ -4,6 +4,7 @@ using Microsoft.EntityFrameworkCore;
 using Rass.Api.Data;
 using Rass.Api.Domain.Entities;
 using Rass.Api.Dtos;
+using Rass.Api.Services;
 
 namespace Rass.Api.Controllers;
 
@@ -12,10 +13,12 @@ namespace Rass.Api.Controllers;
 public class PaymentsController : ControllerBase
 {
     private readonly AppDbContext _db;
+    private readonly MtnMomoService _mtnMomoService;
 
-    public PaymentsController(AppDbContext db)
+    public PaymentsController(AppDbContext db, MtnMomoService mtnMomoService)
     {
         _db = db;
+        _mtnMomoService = mtnMomoService;
     }
 
     [HttpPost("settle-farmer-payments")]
@@ -70,7 +73,7 @@ public class PaymentsController : ControllerBase
         _db.FarmerBalances.AddRange(farmerPayments);
         await _db.SaveChangesAsync();
 
-        // Initiate mobile money transfers (mock implementation)
+        // Initiate mobile money transfers
         foreach (var farmerPayment in farmerPayments)
         {
             var farmer = await _db.Farmers
@@ -79,11 +82,13 @@ public class PaymentsController : ControllerBase
 
             if (farmer != null)
             {
-                // In real implementation, call mobile money API
-                await InitiateMobileMoneyTransfer(farmer.Phone, farmerPayment.Amount, farmerPayment.TransactionReference);
-                
-                farmerPayment.Status = "Paid";
-                farmerPayment.PaidAt = DateTime.UtcNow;
+                var paid = await _mtnMomoService.ProcessPaymentAsync(
+                    farmer.Phone,
+                    farmerPayment.Amount,
+                    farmerPayment.TransactionReference
+                );
+                farmerPayment.Status = paid ? "Paid" : "Failed";
+                farmerPayment.PaidAt = paid ? DateTime.UtcNow : null;
             }
         }
 
@@ -195,6 +200,55 @@ public class PaymentsController : ControllerBase
         });
     }
 
+    [HttpGet("buyer-payments")]
+    [Authorize(Roles = "Buyer,Admin")]
+    public async Task<IActionResult> GetBuyerPayments()
+    {
+        var userId = GetUserId();
+        if (!userId.HasValue) return Unauthorized();
+
+        var query = _db.PaymentLedgers
+            .Include(p => p.Contract)
+            .ThenInclude(c => c.BuyerOrder)
+            .ThenInclude(o => o.BuyerProfile)
+            .AsQueryable();
+
+        if (User.IsInRole("Buyer"))
+        {
+            query = query.Where(p => p.Contract != null &&
+                                     p.Contract.BuyerOrder != null &&
+                                     p.Contract.BuyerOrder.BuyerProfile != null &&
+                                     p.Contract.BuyerOrder.BuyerProfile.UserId == userId.Value);
+        }
+
+        var payments = await query
+            .OrderByDescending(p => p.CreatedAt)
+            .Select(p => new
+            {
+                p.Id,
+                p.Amount,
+                p.Reference,
+                p.Status,
+                p.Type,
+                p.CreatedAt,
+                Contract = p.Contract != null && p.Contract.BuyerOrder != null ? new
+                {
+                    p.Contract.Id,
+                    p.Contract.TrackingId,
+                    Crop = p.Contract.BuyerOrder.Crop,
+                    QuantityKg = p.Contract.BuyerOrder.QuantityKg
+                } : null
+            })
+            .ToListAsync();
+
+        return Ok(new
+        {
+            totalPaid = payments.Where(p => p.Status == "Completed").Sum(p => p.Amount),
+            totalPending = payments.Where(p => p.Status == "Pending" || p.Status == "Held").Sum(p => p.Amount),
+            transactions = payments
+        });
+    }
+
     private Guid? GetUserId()
     {
         var claim = User.FindFirst("http://schemas.xmlsoap.org/ws/2005/05/identity/claims/nameidentifier") ??
@@ -202,13 +256,5 @@ public class PaymentsController : ControllerBase
         return Guid.TryParse(claim?.Value, out var guid) ? guid : null;
     }
 
-    private async Task InitiateMobileMoneyTransfer(string phone, decimal amount, string reference)
-    {
-        // Mock implementation - in production, integrate with MTN Mobile Money or Airtel Money API
-        Console.WriteLine($"Mobile Money Transfer: {phone} - {amount} RWF - Ref: {reference}");
-        
-        // Simulate API call delay
-        await Task.Delay(100);
-    }
 }
 

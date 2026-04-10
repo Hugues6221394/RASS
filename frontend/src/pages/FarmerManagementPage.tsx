@@ -1,10 +1,14 @@
 import { useState, useEffect } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { api } from '../api/client';
+import { useTranslation } from 'react-i18next';
+import { RwandaLocationFields } from '../components/location/RwandaLocationFields';
+import { emptyRwandaLocation } from '../utils/rwandaLocation';
 
 export const FarmerManagementPage = () => {
   const { id } = useParams();
   const navigate = useNavigate();
+  const { t } = useTranslation();
   const isEdit = !!id;
   
   const [loading, setLoading] = useState(false);
@@ -20,6 +24,7 @@ export const FarmerManagementPage = () => {
     farmSizeHectares: 0,
     cooperativeId: ''
   });
+  const [locationForm, setLocationForm] = useState(emptyRwandaLocation());
 
   useEffect(() => {
     loadCooperatives();
@@ -53,6 +58,11 @@ export const FarmerManagementPage = () => {
           farmSizeHectares: farmer.farmSizeHectares || farmer.FarmSizeHectares || 0,
           cooperativeId: farmer.cooperativeId || farmer.CooperativeId || ''
         });
+        setLocationForm((previous) => ({
+          ...previous,
+          district: farmer.district || farmer.District || '',
+          sector: farmer.sector || farmer.Sector || '',
+        }));
       }
     } catch (error) {
       console.error('Failed to load farmer:', error);
@@ -63,16 +73,21 @@ export const FarmerManagementPage = () => {
     e.preventDefault();
     setLoading(true);
     try {
+      const payload = {
+        ...formData,
+        district: locationForm.district,
+        sector: locationForm.sector,
+      };
       if (isEdit) {
-        await api.put(`/api/admin/farmers/${id}`, formData);
-        alert('Farmer updated successfully!');
+        await api.put(`/api/admin/farmers/${id}`, payload);
+        alert(t('admin.farmer_updated'));
       } else {
-        await api.post('/api/farmers/register', formData);
-        alert('Farmer created successfully!');
+        await api.post('/api/farmers/register', payload);
+        alert(t('admin.farmer_created'));
       }
       navigate('/admin');
     } catch (error: any) {
-      alert(error.response?.data?.message || error.response?.data || 'Failed to save farmer');
+      alert(error.response?.data?.message || error.response?.data || t('admin.farmer_save_failed'));
     } finally {
       setLoading(false);
     }
@@ -83,14 +98,14 @@ export const FarmerManagementPage = () => {
       <div className="max-w-4xl mx-auto px-6">
         <div className="bg-white rounded-xl shadow-lg p-8">
           <h1 className="text-3xl font-bold text-gray-900 mb-6">
-            {isEdit ? 'Edit Farmer' : 'Create New Farmer'}
+            {isEdit ? t('admin.edit_farmer') : t('admin.create_farmer')}
           </h1>
 
           <form onSubmit={handleSubmit} className="space-y-6">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Full Name *
+                  {t('common.full_name')} *
                 </label>
                 <input
                   type="text"
@@ -103,7 +118,7 @@ export const FarmerManagementPage = () => {
 
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Email *
+                  {t('common.email')} *
                 </label>
                 <input
                   type="email"
@@ -116,7 +131,7 @@ export const FarmerManagementPage = () => {
 
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Phone *
+                  {t('common.phone')} *
                 </label>
                 <input
                   type="tel"
@@ -129,7 +144,7 @@ export const FarmerManagementPage = () => {
 
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">
-                  National ID *
+                  {t('cooperative.national_id')} *
                 </label>
                 <input
                   type="text"
@@ -140,48 +155,31 @@ export const FarmerManagementPage = () => {
                 />
               </div>
 
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  District *
-                </label>
-                <input
-                  type="text"
-                  value={formData.district}
-                  onChange={(e) => setFormData({...formData, district: e.target.value})}
-                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
-                  required
+              <div className="md:col-span-2">
+                <RwandaLocationFields
+                  value={locationForm}
+                  onChange={setLocationForm}
+                  showCell={false}
+                  showDetail={false}
                 />
               </div>
 
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Sector *
-                </label>
-                <input
-                  type="text"
-                  value={formData.sector}
-                  onChange={(e) => setFormData({...formData, sector: e.target.value})}
-                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
-                  required
-                />
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Crops Grown
+                  {t('common.crops')}
                 </label>
                 <input
                   type="text"
                   value={formData.crops}
                   onChange={(e) => setFormData({...formData, crops: e.target.value})}
                   className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
-                  placeholder="e.g., Maize, Beans, Potatoes"
+                  placeholder={t('admin.crops_placeholder')}
                 />
               </div>
 
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Farm Size (Hectares)
+                  {t('admin.farm_size_hectares')}
                 </label>
                 <input
                   type="number"
@@ -194,14 +192,14 @@ export const FarmerManagementPage = () => {
 
               <div className="md:col-span-2">
                 <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Cooperative (Optional)
+                  {t('admin.cooperative_optional')}
                 </label>
                 <select
                   value={formData.cooperativeId}
                   onChange={(e) => setFormData({...formData, cooperativeId: e.target.value})}
                   className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
                 >
-                  <option value="">Select a cooperative...</option>
+                  <option value="">{t('admin.select_cooperative')}</option>
                   {cooperatives.map((coop) => (
                     <option key={coop.id || coop.Id} value={coop.id || coop.Id}>
                       {coop.name || coop.Name}
@@ -217,14 +215,14 @@ export const FarmerManagementPage = () => {
                 disabled={loading}
                 className="flex-1 bg-gradient-to-r from-blue-600 to-green-600 text-white px-6 py-3 rounded-lg hover:shadow-lg transition-all font-medium disabled:opacity-50"
               >
-                {loading ? 'Saving...' : (isEdit ? 'Update Farmer' : 'Create Farmer')}
+                {loading ? t('common.saving') : (isEdit ? t('admin.update_farmer') : t('admin.create_farmer_action'))}
               </button>
               <button
                 type="button"
                 onClick={() => navigate('/admin')}
                 className="flex-1 bg-gray-200 text-gray-700 px-6 py-3 rounded-lg hover:bg-gray-300 transition-colors font-medium"
               >
-                Cancel
+                {t('common.cancel')}
               </button>
             </div>
           </form>

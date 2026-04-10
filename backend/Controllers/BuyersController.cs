@@ -1,10 +1,12 @@
 using BCrypt.Net;
+using System.IdentityModel.Tokens.Jwt;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Rass.Api.Data;
 using Rass.Api.Domain.Entities;
 using Rass.Api.Dtos;
+using Rass.Api.Services;
 
 namespace Rass.Api.Controllers;
 
@@ -13,10 +15,12 @@ namespace Rass.Api.Controllers;
 public class BuyersController : ControllerBase
 {
     private readonly AppDbContext _db;
+    private readonly MtnMomoService _mtnMomoService;
 
-    public BuyersController(AppDbContext db)
+    public BuyersController(AppDbContext db, MtnMomoService mtnMomoService)
     {
         _db = db;
+        _mtnMomoService = mtnMomoService;
     }
 
     [HttpPost("register")]
@@ -60,6 +64,7 @@ public class BuyersController : ControllerBase
     }
 
     [HttpGet("profile")]
+    [HttpGet("my-profile")]
     [Authorize(Roles = "Buyer")]
     public async Task<IActionResult> GetBuyerProfile()
     {
@@ -71,7 +76,17 @@ public class BuyersController : ControllerBase
             .Include(b => b.Orders)
             .FirstOrDefaultAsync(b => b.UserId == userId.Value);
 
-        if (buyer == null) return NotFound();
+        // Auto-create profile on first access so dashboard never returns 404
+        if (buyer == null)
+        {
+            var user = await _db.Users.FindAsync(userId.Value);
+            if (user == null) return Unauthorized();
+            buyer = new BuyerProfile { UserId = userId.Value, User = user, IsActive = true };
+            _db.BuyerProfiles.Add(buyer);
+            await _db.SaveChangesAsync();
+            // Re-include orders (empty list for new profile)
+            buyer.Orders = new List<BuyerOrder>();
+        }
 
         return Ok(new
         {
@@ -85,8 +100,8 @@ public class BuyersController : ControllerBase
             buyer.TaxId,
             buyer.IsVerified,
             buyer.IsActive,
-            OrderCount = buyer.Orders.Count,
-            ActiveOrders = buyer.Orders.Count(o => o.Status == "Open" || o.Status == "Accepted")
+            OrderCount = buyer.Orders?.Count ?? 0,
+            ActiveOrders = buyer.Orders?.Count(o => o.Status == "Open" || o.Status == "Accepted") ?? 0
         });
     }
 
@@ -96,8 +111,7 @@ public class BuyersController : ControllerBase
     {
         var query = _db.MarketListings
             .Include(l => l.Cooperative)
-            .Where(l => l.Status == "Active" &&
-                       l.AvailabilityWindowEnd > DateTime.UtcNow)
+            .Where(l => l.Status == "Active")
             .AsQueryable();
 
         if (!string.IsNullOrEmpty(request.Crop))
@@ -138,6 +152,8 @@ public class BuyersController : ControllerBase
                     l.Cooperative.Name,
                     l.Cooperative.Region,
                     l.Cooperative.District,
+                    l.Cooperative.Sector,
+                    l.Cooperative.Cell,
                     l.Cooperative.Location
                 }
             })
@@ -190,8 +206,8 @@ public class BuyersController : ControllerBase
             QuantityKg = request.QuantityKg,
             PriceOffer = request.PriceOffer,
             DeliveryLocation = request.DeliveryLocation,
-            DeliveryWindowStart = request.DeliveryWindowStart,
-            DeliveryWindowEnd = request.DeliveryWindowEnd,
+            DeliveryWindowStart = request.DeliveryWindowStart == default ? DateTime.UtcNow.AddDays(2) : NormalizeUtc(request.DeliveryWindowStart),
+            DeliveryWindowEnd = request.DeliveryWindowEnd == default ? DateTime.UtcNow.AddDays(4) : NormalizeUtc(request.DeliveryWindowEnd),
             Status = "Open",
             Notes = request.Notes ?? ""
         };
@@ -218,7 +234,7 @@ public class BuyersController : ControllerBase
         var buyer = await _db.BuyerProfiles
             .FirstOrDefaultAsync(b => b.UserId == userId.Value);
 
-        if (buyer == null) return NotFound();
+        if (buyer == null) return Ok(new List<object>());
 
         var orders = await _db.BuyerOrders
             .Include(o => o.MarketListing)
@@ -284,7 +300,7 @@ public class BuyersController : ControllerBase
             ContractId = contract.Id,
             Amount = (decimal)order.QuantityKg * order.PriceOffer,
             Reference = $"ESCROW-{Random.Shared.Next(100000, 999999)}",
-            Status = "Held",
+            Status = "Pending",
             Type = "Escrow",
             CreatedAt = DateTime.UtcNow
         };
@@ -292,10 +308,23 @@ public class BuyersController : ControllerBase
         _db.PaymentLedgers.Add(payment);
         await _db.SaveChangesAsync();
 
-        // In real implementation, integrate with mobile money API
-        // For now, simulate immediate escrow hold
-        payment.Status = "Completed";
+        var payerPhone = order.BuyerProfile.Phone;
+        if (string.IsNullOrWhiteSpace(payerPhone))
+        {
+            return BadRequest("Buyer phone number is required to fund escrow");
+        }
+        var paid = await _mtnMomoService.ProcessPaymentAsync(
+            payerPhone,
+            payment.Amount,
+            payment.Reference
+        );
+        payment.Status = paid ? "Completed" : "Failed";
         await _db.SaveChangesAsync();
+
+        if (!paid)
+        {
+            return StatusCode(502, new { message = "Payment gateway failed to process escrow funding", payment.Reference });
+        }
 
         return Ok(new { payment.Id, payment.Reference, payment.Status, payment.Amount });
     }
@@ -342,16 +371,81 @@ public class BuyersController : ControllerBase
         return Ok(new { contract.Id, contract.Status, message = "Payment released to cooperative" });
     }
 
+    [HttpDelete("order/{orderId}")]
+    [Authorize(Roles = "Buyer")]
+    public async Task<IActionResult> CancelOrder(Guid orderId)
+    {
+        var userId = GetUserId();
+        if (!userId.HasValue) return Unauthorized();
+
+        var order = await _db.BuyerOrders
+            .Include(o => o.BuyerProfile)
+            .FirstOrDefaultAsync(o => o.Id == orderId && o.BuyerProfile.UserId == userId.Value);
+
+        if (order == null) return NotFound("Order not found");
+
+        if (order.Status != "Open")
+            return BadRequest("Only open orders can be cancelled");
+
+        order.Status = "Cancelled";
+        await _db.SaveChangesAsync();
+
+        return Ok(new { order.Id, order.Status });
+    }
+
+    [HttpPut("profile")]
+    [Authorize(Roles = "Buyer")]
+    public async Task<IActionResult> UpdateBuyerProfile(UpdateBuyerProfileRequest request)
+    {
+        var userId = GetUserId();
+        if (!userId.HasValue) return Unauthorized();
+
+        var buyer = await _db.BuyerProfiles
+            .FirstOrDefaultAsync(b => b.UserId == userId.Value);
+
+        if (buyer == null) return NotFound();
+
+        if (request.Organization != null) buyer.Organization = request.Organization;
+        if (request.BusinessType != null) buyer.BusinessType = request.BusinessType;
+        if (request.Location != null) buyer.Location = request.Location;
+        if (request.Phone != null) buyer.Phone = request.Phone;
+
+        await _db.SaveChangesAsync();
+
+        return Ok(new { message = "Profile updated successfully" });
+    }
+
     private Guid? GetUserId()
     {
-        var claim = User.FindFirst("http://schemas.xmlsoap.org/ws/2005/05/identity/claims/nameidentifier") ??
-                   User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier);
-        return Guid.TryParse(claim?.Value, out var guid) ? guid : null;
+        var sub = User.FindFirst(JwtRegisteredClaimNames.Sub)?.Value
+                  ?? User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value
+                  ?? User.FindFirst("http://schemas.xmlsoap.org/ws/2005/05/identity/claims/nameidentifier")?.Value;
+        return Guid.TryParse(sub, out var guid) ? guid : null;
     }
 
     private async Task NotifyCooperative(Guid cooperativeId, BuyerOrder order)
     {
-        // Mock notification - in real system would send notification to cooperative
-        Console.WriteLine($"Order notification sent to cooperative {cooperativeId}: New order for {order.QuantityKg}kg of {order.Crop}");
+        var cooperative = await _db.Cooperatives.FirstOrDefaultAsync(c => c.Id == cooperativeId);
+        if (cooperative?.ManagerId == null) return;
+
+        _db.Notifications.Add(new Notification
+        {
+            Id = Guid.NewGuid(),
+            UserId = cooperative.ManagerId.Value,
+            Title = "New buyer order",
+            Message = $"New order for {order.QuantityKg}kg of {order.Crop}",
+            Type = "order.created",
+            IsRead = false,
+            ActionUrl = $"/cooperative-dashboard/orders/{order.Id}",
+            CreatedAt = DateTime.UtcNow
+        });
+        await _db.SaveChangesAsync();
+    }
+
+    private static DateTime NormalizeUtc(DateTime value)
+    {
+        if (value.Kind == DateTimeKind.Utc) return value;
+        if (value.Kind == DateTimeKind.Local) return value.ToUniversalTime();
+        return DateTime.SpecifyKind(value, DateTimeKind.Local).ToUniversalTime();
     }
 }

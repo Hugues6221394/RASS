@@ -5,19 +5,32 @@ export type Role =
   | 'Buyer'
   | 'Transporter'
   | 'StorageOperator'
+  | 'Applicant'
   | 'MarketAgent'
   | 'Government'
   | string;
 
-export interface LoginRequest {
+export interface User {
+  id: string;
+  fullName: string;
   email: string;
+  isActive: boolean;
+  role: Role;
+}
+
+export interface LoginRequest {
+  identifier: string;
   password: string;
+  otp?: string;
 }
 
 export interface LoginResponse {
+  id: string;
   token: string;
   fullName: string;
   roles: Role[];
+  requiresTwoFactor?: boolean;
+  twoFactorMessage?: string | null;
 }
 
 export interface Lot {
@@ -30,11 +43,22 @@ export interface Lot {
   verified: boolean;
   cooperative?: string;
   farmer?: string;
+  lotContributions?: {
+    id: string;
+    farmerId: string;
+    quantityKg: number;
+    contributedAt: string;
+    farmer?: { fullName: string };
+  }[];
 }
 
 export interface MarketPrice {
   id: string;
   market: string;
+  region: string;
+  district?: string;
+  sector?: string;
+  cell?: string;
   crop: string;
   observedAt: string;
   pricePerKg: number;
@@ -70,6 +94,12 @@ export interface TransportRequest {
   status: string;
   assignedTruck?: string;
   contractTracking?: string;
+  contract?: {
+    id: string;
+    trackingId: string;
+    crop: string;
+    quantity: number;
+  };
 }
 
 export interface BuyerOrder {
@@ -77,14 +107,32 @@ export interface BuyerOrder {
   crop: string;
   quantityKg: number;
   priceOffer: number;
+  totalPrice?: number;
   deliveryLocation: string;
   status: string;
   deliveryWindowStart: string;
   deliveryWindowEnd: string;
-  buyer: string;
+  createdAt?: string;
+  // buyer is a nested object in the cooperative's view; absent in buyer's own view
+  buyer?: { fullName: string; organization: string; phone?: string } | string;
   marketListingId?: string;
   notes?: string;
   contracts?: string[];
+  contract?: {
+    id: string;
+    trackingId: string;
+    agreedPrice: number;
+    status?: string;
+  };
+  marketListing?: {
+    id: string;
+    cooperative?: string | { id: string; name: string };
+    minimumPrice?: number;
+  };
+  listing?: {
+    id: string;
+    crop?: string;
+  };
 }
 
 export interface Contract {
@@ -102,6 +150,7 @@ export interface TrackingInfo {
   status: string;
   order: {
     crop: string;
+    market: string;
     deliveryLocation: string;
     deliveryWindowStart: string;
     deliveryWindowEnd: string;
@@ -120,8 +169,13 @@ export interface TrackingInfo {
     startDate: string;
     endDate: string;
   }[];
+  driver?: {
+    name?: string;
+    phone?: string;
+    vehicleType?: string;
+    license?: string;
+  };
 }
-
 export interface FarmerProfile {
   id: string;
   fullName: string;
@@ -132,6 +186,8 @@ export interface FarmerProfile {
   sector: string;
   crops: string;
   farmSizeHectares: number;
+  soilType?: string;
+  primaryCrops?: string;
   isActive: boolean;
   cooperative?: {
     id: string;
@@ -178,6 +234,7 @@ export interface MarketListing {
   availabilityWindowEnd: string;
   description: string;
   qualityGrade: string;
+  status: string;
   cooperative: {
     id: string;
     name: string;
@@ -185,6 +242,8 @@ export interface MarketListing {
     district: string;
     location: string;
   };
+  primaryImage?: string;
+  images?: { id: string; imageUrl: string; displayOrder: number }[];
 }
 
 export interface BuyerProfile {
@@ -215,6 +274,7 @@ export interface TransporterProfile {
   operatingRegions: string[];
   isVerified: boolean;
   isActive: boolean;
+  isAvailable: boolean;
   activeJobs: number;
   completedJobs: number;
 }
@@ -240,5 +300,61 @@ export interface TransportJob {
     crop: string;
     buyer: string;
   };
+}
+
+export interface PriceRegulation {
+  id: string;
+  crop: string;
+  region: string;
+  district?: string;
+  market?: string;
+  minPricePerKg?: number;
+  maxPricePerKg: number;
+  effectiveFrom: string;
+  effectiveTo: string;
+  status: string;
+  notes?: string;
+  createdAt: string;
+}
+
+export interface SeasonalGuidance {
+  id: string;
+  crop: string;
+  region: string;
+  season: string;
+  stabilityStart?: string;
+  stabilityEnd?: string;
+  expectedTrend: string;
+  expectedMinPrice?: number;
+  expectedMaxPrice?: number;
+  notes?: string;
+  recommendationForFarmers?: string;
+  createdAt: string;
+}
+
+export interface GeneratedReport {
+  reportType: string;
+  generatedAt?: string;
+  period?: string;
+  filters?: Record<string, string | null>;
+  summary?: Record<string, number | string>;
+  data?: Record<string, unknown>[];
+  insights?: string[];
+  error?: string;
+  [key: string]: unknown;
+}
+
+export interface PriceSubmission {
+  id: string;
+  crop: string;
+  market: string;
+  region: string;
+  district?: string;
+  pricePerKg: number;
+  observedAt: string;
+  verificationStatus: string;
+  moderationNote?: string;
+  moderatedAt?: string;
+  agentName: string;
 }
 
