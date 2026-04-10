@@ -1,0 +1,6 @@
+@Rass.Api_HostAddress = http://localhost:5172
+
+GET {{Rass.Api_HostAddress}}/weatherforecast/
+Accept: application/json
+
+###

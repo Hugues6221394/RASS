@@ -1,0 +1,1054 @@
+<p align="center">
+  <img src="https://img.shields.io/badge/Platform-Rwanda_Agri_Stability_System-00793E?style=for-the-badge" alt="RASS Badge"/>
+</p>
+
+<h1 align="center">🌾 RASS — Rwanda Agricultural Stability System</h1>
+
+<p align="center">
+  <strong>A National-Grade Digital Trade Platform for Rwanda's Agricultural Value Chain</strong>
+</p>
+
+<p align="center">
+  <img src="https://img.shields.io/badge/.NET-10.0-512BD4?style=flat-square&logo=dotnet" alt=".NET 10"/>
+  <img src="https://img.shields.io/badge/React-19.2-61DAFB?style=flat-square&logo=react" alt="React 19"/>
+  <img src="https://img.shields.io/badge/Python-3.9+-3776AB?style=flat-square&logo=python" alt="Python"/>
+  <img src="https://img.shields.io/badge/PostgreSQL-16-4169E1?style=flat-square&logo=postgresql" alt="PostgreSQL"/>
+  <img src="https://img.shields.io/badge/AI-Ensemble_ML-FF6F00?style=flat-square&logo=tensorflow" alt="AI"/>
+  <img src="https://img.shields.io/badge/Realtime-SignalR-512BD4?style=flat-square&logo=dotnet" alt="SignalR"/>
+  <img src="https://img.shields.io/badge/License-Academic-green?style=flat-square" alt="License"/>
+</p>
+
+<p align="center">
+  <em>Built as a Final Year Project at the Adventist University of Central Africa (AUCA)</em>
+</p>
+
+---
+
+## 📖 Table of Contents
+
+- [What is RASS?](#-what-is-rass)
+- [The Problem We Solve](#-the-problem-we-solve)
+- [Key Features](#-key-features)
+- [System Architecture](#-system-architecture)
+- [Tech Stack](#-tech-stack)
+- [User Roles & Dashboards](#-user-roles--dashboards)
+- [AI & Machine Learning Engine](#-ai--machine-learning-engine)
+- [AI Usage Per Role](#-ai-usage-per-role)
+- [How the Forecasting Model Works](#-how-the-forecasting-model-works)
+- [API Endpoints](#-api-endpoints)
+- [Database Schema](#-database-schema)
+- [Getting Started](#-getting-started)
+- [Project Structure](#-project-structure)
+- [Rwanda Agricultural Context](#-rwanda-agricultural-context)
+- [Future Roadmap](#-future-roadmap)
+- [Contributors](#-contributors)
+
+---
+
+## 🌍 What is RASS?
+
+**RASS (Rwanda Agricultural Stability System)** is a full-stack, AI-powered digital trade platform designed to stabilize and modernize Rwanda's agricultural market. It connects **every actor** in the agricultural value chain — from smallholder farmers in rural cooperatives to government policy-makers — onto a single, intelligent platform.
+
+Think of it as an **agricultural stock exchange** combined with an **AI advisor** for Rwanda's farming sector.
+
+RASS provides:
+
+- **Real-time market price tracking** across Rwanda's districts
+- **AI-powered price forecasting** that predicts crop prices 7–30 days ahead
+- **Smart buy/sell advisory** that tells each user exactly when to act
+- **End-to-end trade management** from harvest declaration to buyer delivery
+- **Live shipment tracking** with GPS-based transporter locations
+- **Government-level analytics** for national food security monitoring
+- **Multi-language support** (English & Kinyarwanda)
+
+---
+
+## 🔴 The Problem We Solve
+
+Rwanda's agricultural sector employs **70% of the population** but faces critical challenges:
+
+| Problem | Impact | How RASS Solves It |
+|---------|--------|-------------------|
+| **Price opacity** | Farmers sell at unfair prices because they don't know the true market rate | Real-time price data from market agents across all districts |
+| **Post-harvest losses** | Up to **30%** of produce is lost due to poor coordination | Digital inventory management + logistics matching |
+| **No price forecasting** | Farmers and buyers can't plan ahead | AI ensemble model predicts prices 7–30 days forward |
+| **Fragmented supply chain** | Farmers → Cooperatives → Markets are disconnected | End-to-end digital trade from harvest to delivery |
+| **Information asymmetry** | Buyers have more price information than farmers | Equal access to market intelligence for all roles |
+| **Government blind spots** | Policymakers lack real-time agricultural data | National analytics dashboard with early warning systems |
+| **Transport inefficiency** | No centralized system to match cargo with transporters | Smart logistics matching + live GPS tracking |
+
+---
+
+## ✨ Key Features
+
+### 🔐 Multi-Role Access Control
+
+Eight distinct user roles, each with a tailored dashboard, AI advisory, and specialized tools:
+
+**Farmer** · **Cooperative Manager** · **Buyer** · **Market Agent** · **Transporter** · **Storage Operator** · **Government Official** · **System Admin**
+
+### 🤖 AI-Powered Intelligence
+
+- **Ensemble ML forecasting** — 6 algorithms (SARIMA, Holt-Linear, LSTM, Gradient Boosting, XGBoost, Prophet) combined via walk-forward validation
+- **Role-specific AI advisory** — the same underlying data produces completely different advice for buyers vs. sellers vs. government
+- **Anomaly detection** — automatic Z-score alerts when prices spike abnormally (>2.5σ)
+- **Seasonal strategy** — aligned with Rwanda's three agricultural seasons (A, B, C)
+
+### 📊 Real-Time Analytics
+
+- Live market prices from agent submissions across Rwanda
+- Interactive charts (Recharts) — AreaCharts, BarCharts, PieCharts, LineCharts
+- National overview dashboards with supply/demand analysis
+- Volatility reports and risk scoring per crop
+
+### 🛒 Full Trade Lifecycle
+
+```
+Farmers declare harvests
+  → Cooperatives aggregate inventory
+    → Market listings posted
+      → Buyers place orders
+        → Transport arranged
+          → Live GPS delivery tracking
+            → Payment settled
+```
+
+### 📍 Live GPS Tracking
+
+- Transporters share real-time location via the browser's Geolocation API
+- Buyers and cooperatives track deliveries live
+- 5-step delivery progress: **Assigned → Picked Up → In Transit → Delivered → Completed**
+
+### 💬 Real-Time Communication
+
+- **SignalR** WebSocket-powered instant messaging between users
+- Push notifications for orders, price alerts, and delivery updates
+- Chat integrated directly into order management workflows
+
+### 🌐 Internationalization
+
+- Full **English** and **Kinyarwanda** language support
+- Language switcher persisted in localStorage
+- All UI text, labels, and messages are translatable
+
+### 🛡️ Enterprise-Grade Security
+
+- JWT Bearer authentication with role-based authorization policies
+- BCrypt password hashing (salted, 12 rounds)
+- Rate limiting — 100 requests/minute per client
+- Audit logging for all administrative actions
+
+---
+
+## 🏗 System Architecture
+
+```
+┌──────────────────────────────────────────────────────────────────┐
+│                    RASS Platform Architecture                      │
+├──────────────────────────────────────────────────────────────────┤
+│                                                                    │
+│  ┌───────────────────┐       ┌──────────────────────────────┐     │
+│  │   React Frontend  │──────▶│     ASP.NET Core 10 API      │     │
+│  │   (Vite + TS)     │◀──────│     (C# REST + SignalR)      │     │
+│  │                   │       │                              │     │
+│  │  • 25 Pages       │       │  • 23 Controllers            │     │
+│  │  • 10+ Components │       │  • JWT Auth + RBAC           │     │
+│  │  • Recharts       │       │  • Rate Limiting             │     │
+│  │  • MUI + Tailwind │       │  • Audit Logging             │     │
+│  │  • i18n (EN/KIN)  │       │                              │     │
+│  │  • SignalR Client │       │       │             │        │     │
+│  └───────────────────┘       │       ▼             ▼        │     │
+│                               │ ┌──────────┐ ┌───────────┐  │     │
+│                               │ │PostgreSQL│ │Forecasting│  │     │
+│                               │ │   16     │ │ Service   │  │     │
+│                               │ │          │ │ (Python)  │  │     │
+│                               │ │23 Tables │ │ 6 ML Algo │  │     │
+│                               │ │Full ORM  │ │ FastAPI   │  │     │
+│                               │ └──────────┘ └───────────┘  │     │
+│                               └──────────────────────────────┘     │
+│                                                                    │
+│  ┌──────────────────────────────────────────────────────────┐     │
+│  │              Docker Compose Orchestration                  │     │
+│  │  PostgreSQL:5433 │ API:8080 │ Frontend:4173 │ PgAdmin:5050│     │
+│  └──────────────────────────────────────────────────────────┘     │
+└──────────────────────────────────────────────────────────────────┘
+```
+
+### Data Flow
+
+1. **Market Agents** submit daily prices from local markets → stored in PostgreSQL
+2. **Forecasting Service** (Python) fetches historical prices → runs 6-model ML ensemble → returns predictions with confidence intervals
+3. **Backend API** aggregates real market data + AI predictions → serves role-specific insights via REST endpoints
+4. **Frontend** renders interactive dashboards with charts, alerts, buy/sell signals, and AI advisory panels
+
+---
+
+## 🛠 Tech Stack
+
+### Backend — ASP.NET Core 10
+
+| Technology | Version | Purpose |
+|-----------|---------|---------|
+| **ASP.NET Core** | 10.0 | REST API framework |
+| **Entity Framework Core** | 10.0.2 | ORM & database migrations |
+| **PostgreSQL** (Npgsql) | 16 + 10.0.0 | Relational database |
+| **SignalR** | 10.0 | WebSocket real-time messaging & notifications |
+| **JWT Bearer** | 10.0.2 | Authentication tokens |
+| **BCrypt.Net-Next** | 4.0.3 | Secure password hashing |
+| **Swashbuckle** | 10.1.0 | Swagger/OpenAPI documentation |
+
+### Frontend — React 19 + TypeScript
+
+| Technology | Version | Purpose |
+|-----------|---------|---------|
+| **React** | 19.2.0 | UI framework (functional components + hooks) |
+| **TypeScript** | 5.9.3 | Type-safe JavaScript |
+| **Vite** | 7.2.4 | Lightning-fast build tool & dev server |
+| **React Router** | 7.12.0 | Client-side routing with protected routes |
+| **TanStack Query** | 5.90.19 | Server state management & caching |
+| **Recharts** | 3.6.0 | Interactive data visualizations (Area, Bar, Pie, Line charts) |
+| **Material-UI (MUI)** | 7.3.7 | Component library + icons + date pickers |
+| **Tailwind CSS** | 3.4.19 | Utility-first responsive styling |
+| **Axios** | 1.13.2 | HTTP client with interceptors |
+| **SignalR Client** | 10.0.0 | Real-time WebSocket connection |
+| **React Hook Form** | 7.71.1 | Performant form management |
+| **Zod** | 4.3.5 | Runtime schema validation |
+| **i18next** | 25.7.4 | Internationalization framework (EN/KIN) |
+| **date-fns** | 4.1.0 | Date formatting & manipulation |
+| **Emotion** | 11.14.0 | CSS-in-JS for MUI theming |
+
+### AI / Forecasting Service — Python
+
+| Library | Version | Purpose |
+|---------|---------|---------|
+| **FastAPI** | 0.115.0+ | High-performance ML microservice API |
+| **Uvicorn** | 0.34.0+ | ASGI server |
+| **pandas** | 2.2.0+ | Time-series data manipulation & analysis |
+| **NumPy** | 1.26.0+ | Numerical computing & array operations |
+| **SciPy** | 1.12.0+ | Scientific computing & statistical functions |
+| **scikit-learn** | 1.5.0+ | Gradient Boosting Regressor (GBR) |
+| **statsmodels** | 0.14.0+ | SARIMA seasonal time-series models |
+| **Prophet** | 1.1.5+ | Meta/Facebook's additive time-series forecasting |
+| **XGBoost** | 2.0.0+ | Extreme Gradient Boosting framework |
+| **LightGBM** | 4.3.0+ | Microsoft's Light Gradient Boosting Machine |
+| **PyTorch** | 2.0.0+ | Deep learning framework (optional, for advanced LSTM) |
+| **TensorFlow** | 2.15.0+ | Deep learning framework (optional) |
+| **joblib** | 1.3.0+ | Model serialization & persistence |
+| **httpx** | 0.27.0+ | Async inter-service HTTP communication |
+
+### Infrastructure & DevOps
+
+| Technology | Purpose |
+|-----------|---------|
+| **Docker** | Container runtime |
+| **Docker Compose** | Multi-service orchestration (4 containers) |
+| **PgAdmin 4** | Visual database administration interface |
+| **Swagger UI** | Interactive API documentation & testing |
+
+---
+
+## 👥 User Roles & Dashboards
+
+RASS serves **8 distinct user roles**, each with a specialized, feature-rich dashboard:
+
+### 🌱 1. Farmer Dashboard (~1,000 lines of UI)
+
+> *"Know your worth, plan your harvest, get paid fairly"*
+
+**9 tabs:** Overview · Profile · Harvest Forecasts · Contributions · Payments · Market Prices · AI Advisory · Announcements · Feedback
+
+| Feature | Description |
+|---------|-------------|
+| **Profile Management** | Personal details, farm location, crops grown, farm size |
+| **Harvest Forecasts** | AI-predicted yields based on seasonal patterns and historical data |
+| **Contributions Tracker** | View all produce contributed to cooperatives with quantity and date |
+| **Payment History** | Track all earnings from cooperative sales, pending vs. received |
+| **Live Market Prices** | Current prices across Rwanda's markets — know your crop's true value |
+| **AI Crop Advisory** | Personalized recommendations: what to plant, when to harvest, profitability calculator |
+| **Rwanda Seasonal Calendar** | Visual Season A/B/C timeline with optimal planting windows for each crop |
+| **Announcements** | Cooperative-level news, policy changes, and updates |
+| **Feedback System** | Submit suggestions and concerns to cooperative management |
+
+---
+
+### 🏢 2. Cooperative Manager Dashboard (~2,100 lines of UI)
+
+> *"Aggregate, optimize, and sell at the right time"*
+
+**8 tabs:** Overview · Farmers · Inventory · Listings · Orders · Logistics · Payments · AI Analytics
+
+| Feature | Description |
+|---------|-------------|
+| **Farmer Management** | Register, activate, deactivate, and monitor cooperative members |
+| **Inventory Management** | Track aggregated produce by crop, quality grade (A/B/C), and weight |
+| **Market Listings** | Create and manage marketplace listings with images and minimum prices |
+| **Order Management** | Accept/reject buyer orders with a 7-step delivery progress bar |
+| **Logistics** | Request transporters, track deliveries in real-time, chat with drivers |
+| **Payment Analytics** | Revenue tracking, transaction history, farmer payout management |
+| **📈 AI SELL NOW Alerts** | Urgent signals when crop prices are at peak and predicted to fall |
+| **⏳ AI HOLD Recommendations** | Advice to hold inventory when prices are rising |
+| **💰 Revenue Optimizer** | Side-by-side comparison: sell-now revenue vs. predicted future revenue |
+| **📊 Price vs Inventory Chart** | Dual-axis visualization identifying optimal sell candidates |
+| **🌍 Market Demand Signals** | Hot-demand crops vs. oversupplied inventory analysis |
+| **🔮 14-Day Price Forecast** | Per-crop AreaCharts with sell-point markers at predicted peaks |
+| **🌾 Seasonal Sell Strategy** | Rwanda calendar-aligned selling recommendations |
+| **📋 AI Advisory Report** | Multi-paragraph analysis of inventory, prices, demand, and risks |
+| **🏆 Performance Score** | Gamified 0–100 cooperative performance metric |
+
+---
+
+### 🛒 3. Buyer Dashboard (~1,700 lines of UI)
+
+> *"Buy smart — AI tells you when to purchase and when to wait"*
+
+**7 tabs:** Overview · Marketplace · Orders · Payments · Forecast · AI Buying Intelligence · Profile
+
+| Feature | Description |
+|---------|-------------|
+| **Marketplace Browser** | Filter and search listings by crop, price, quality grade, region |
+| **Shopping Cart** | Add listings, adjust quantities, review and checkout |
+| **Order Management** | Track orders through the full fulfillment lifecycle |
+| **Payment Tracking** | Total spent, pending payments, detailed transaction history |
+| **Price Forecasting** | 14-day AreaCharts per crop with confidence bands |
+| **🛒 AI Buy Now Signals** | Crops at low prices with rising trends — buy before the increase |
+| **📈 Price Rise Alerts** | High-volatility crops trending upward — act fast |
+| **⏳ Wait to Buy** | Crops with falling prices — save money by waiting |
+| **💰 Procurement Calculator** | Current cost vs. optimal buy date cost with savings estimate |
+| **🌾 Seasonal Buying Guide** | Rwanda's 3 seasons mapped to optimal purchasing strategy |
+| **📊 Market Intelligence** | Supply vs. demand gap analysis with interactive BarCharts |
+| **🔮 14-Day Forecast + Buy Signals** | Charts with green markers at price troughs (optimal buy dates) |
+| **🏆 AI Procurement Score** | Gamified 0–100 score based on purchase timing efficiency |
+| **💬 AI Market Commentary** | Natural language paragraphs with personalized buying advice |
+
+---
+
+### 📊 4. Market Agent Dashboard (~880 lines of UI)
+
+> *"The eyes and ears of the agricultural market"*
+
+**8 tabs:** Overview · Submit Price · My Submissions · Regional Analysis · Price Trends · AI Insights · Anomalies · Reports
+
+| Feature | Description |
+|---------|-------------|
+| **Price Submission** | Submit daily prices with **type-ahead datalist** inputs — select from known crops/markets OR type custom ones |
+| **My Submissions** | Full history of all submitted price reports with timestamps |
+| **Regional Analysis** | Price comparisons across districts with difference indicators |
+| **Price Trends** | Historical price movement LineCharts for any crop |
+| **Anomaly Detection** | AI-powered Z-score analysis flags unusual price spikes |
+| **🔥 Trending Crops** | Ranked by demand volume and price momentum |
+| **📈 Soon-to-Rise Predictions** | Forecast identifies crops with positive momentum |
+| **📉 Soon-to-Fall Predictions** | Forecast identifies crops with negative momentum |
+| **Market Sentiment Gauge** | Bullish / Neutral / Bearish assessment per crop |
+| **Coverage Score** | Tracks submission completeness vs. expected market coverage |
+
+---
+
+### 🚛 5. Transporter Dashboard (~620 lines of UI)
+
+> *"Find jobs, deliver efficiently, earn more"*
+
+**8 tabs:** Overview · Available Jobs · Active Jobs · Completed · Earnings · AI Insights · Live Tracking · Profile
+
+| Feature | Description |
+|---------|-------------|
+| **Available Jobs** | Browse open transport requests matching vehicle capacity |
+| **Active Jobs** | 5-step visual progress bar: Assigned → Picked Up → In Transit → Delivered → Completed |
+| **Completed Jobs** | Full delivery history with customer ratings |
+| **Earnings Analytics** | Revenue charts, per-job breakdown, monthly trends |
+| **Live GPS Tracking** | Share real-time location via `navigator.geolocation` — buyers and cooperatives see the truck moving in real-time |
+| **AI Route Insights** | Demand predictions per route, peak earning periods |
+| **Profile Management** | Vehicle details, license plate, capacity, availability toggle |
+
+---
+
+### 🏪 6. Storage Operator Dashboard
+
+> *"Manage warehouse space and bookings"*
+
+| Feature | Description |
+|---------|-------------|
+| **Facility Management** | Register storage facilities with capacity, pricing, location |
+| **Booking System** | Accept and manage storage booking requests |
+| **Occupancy Tracking** | Monitor warehouse utilization rates in real-time |
+
+---
+
+### 🏛 7. Government Dashboard
+
+> *"National food security at your fingertips"*
+
+| Feature | Description |
+|---------|-------------|
+| **National Overview** | Aggregate metrics: total farmers, cooperatives, production volume, trade value |
+| **Price Trends** | Cross-district price comparison LineCharts |
+| **Supply vs Demand** | National BarCharts: farmer output vs. buyer demand per crop |
+| **🔴 Critical Alerts** | Price spikes >2.5σ, supply shortages, market disruptions |
+| **🟡 Watch Items** | Rising volatility, emerging imbalances, seasonal risks |
+| **🟢 Positive Signals** | Stable prices, growing trade volume, market health indicators |
+| **AI National Forecast** | Ensemble predictions for top 8 crops with confidence intervals |
+| **District Analytics** | Per-district production and trade metrics |
+
+---
+
+### ⚙️ 8. System Admin Dashboard
+
+> *"Manage users, monitor the platform, ensure integrity"*
+
+| Feature | Description |
+|---------|-------------|
+| **User Management** | CRUD operations across all 8 user roles |
+| **Role Assignment** | Grant/revoke roles with policy-based authorization |
+| **System Monitoring** | Platform health, API telemetry, error tracking |
+| **Audit Logs** | Complete history of all administrative actions |
+| **Reference Data** | Manage crops, markets, districts, and system configuration |
+
+---
+
+## 🤖 AI & Machine Learning Engine
+
+RASS features a sophisticated **Python-based forecasting microservice** that runs independently, communicating with the .NET backend via HTTP. It combines **6 machine learning algorithms** into a weighted ensemble for accurate agricultural price prediction.
+
+### The 6 Algorithms — Ensemble Pipeline
+
+```
+┌──────────────────────────────────────────────────────────────┐
+│            RASS Ensemble Forecasting Pipeline                  │
+├──────────────────────────────────────────────────────────────┤
+│                                                                │
+│  Historical Prices + Market Features + External Factors        │
+│                         │                                      │
+│                   ┌─────▼─────┐                                │
+│                   │  Feature   │  25+ engineered features      │
+│                   │ Engineering│  Lags, rolling stats, season  │
+│                   └─────┬─────┘                                │
+│         ┌───────────────┼───────────────┐                      │
+│         ▼               ▼               ▼                      │
+│  ┌────────────┐  ┌────────────┐  ┌────────────┐               │
+│  │  Holt's    │  │  SARIMA    │  │  Prophet   │               │
+│  │  Linear    │  │ (1,1,1)    │  │ (Meta)     │               │
+│  │ α=0.3 β=0.1│  │ s=(0,1,1,7)│  │ Additive   │               │
+│  └─────┬──────┘  └─────┬──────┘  └─────┬──────┘               │
+│         │               │               │                      │
+│         ▼               ▼               ▼                      │
+│  ┌────────────┐  ┌────────────┐  ┌────────────┐               │
+│  │ LSTM-Lite  │  │  Gradient  │  │ XGBoost /  │               │
+│  │ (RNN, 8u)  │  │  Boosting  │  │ LightGBM   │               │
+│  │ Pure NumPy │  │ (sklearn)  │  │            │               │
+│  └─────┬──────┘  └─────┬──────┘  └─────┬──────┘               │
+│         │               │               │                      │
+│         └───────────────┼───────────────┘                      │
+│                   ┌─────▼─────┐                                │
+│                   │Walk-Forward│  RMSE-based weight            │
+│                   │Validation  │  computation                  │
+│                   └─────┬─────┘                                │
+│                   ┌─────▼─────┐                                │
+│                   │ Weighted   │  Best model gets              │
+│                   │ Ensemble   │  highest weight               │
+│                   │  Average   │  automatically                │
+│                   └─────┬─────┘                                │
+│                         │                                      │
+│         ┌───────────────┼───────────────┐                      │
+│         ▼               ▼               ▼                      │
+│  ┌────────────┐  ┌────────────┐  ┌────────────┐               │
+│  │ Confidence │  │  Trend &   │  │  Decision  │               │
+│  │ Intervals  │  │ Volatility │  │  Engine    │               │
+│  │ (80% CI)   │  │ Detection  │  │ Sell/Hold  │               │
+│  └────────────┘  └────────────┘  └────────────┘               │
+│                                                                │
+└──────────────────────────────────────────────────────────────┘
+```
+
+### Algorithm Deep Dive
+
+#### 1️⃣ Holt's Linear Exponential Smoothing
+
+- **Type:** Statistical — double exponential smoothing
+- **Parameters:** α = 0.3 (level smoothing), β = 0.1 (trend smoothing)
+- **How it works:** Maintains two components — a *level* (smoothed price) and a *trend* (smoothed direction of change). Each new price observation updates both components using exponentially-weighted averages. Forecasts project forward as `level + trend × horizon_days`.
+- **Strength:** Extremely fast (O(n) single-pass), interpretable, excellent for 1–14 day forecasts with clear directional trends
+- **When it wins:** Crops with steady upward or downward price movements
+
+#### 2️⃣ SARIMA — Seasonal AutoRegressive Integrated Moving Average
+
+- **Type:** Statistical time-series model
+- **Configuration:** SARIMAX(1,1,1)(0,1,1,7)
+  - **AR(1):** Uses 1 lagged price value for autoregression
+  - **I(1):** First-order differencing to remove non-stationarity
+  - **MA(1):** Uses 1 lagged forecast error
+  - **Seasonal(7):** Weekly periodicity — captures recurring market-day patterns
+- **How it works:** Decomposes the price series into autoregressive, moving average, and seasonal components. The weekly seasonal period (s=7) is crucial because agricultural markets in Rwanda have recurring weekly patterns tied to market days.
+- **Library:** `statsmodels 0.14+`
+- **When it wins:** Crops with strong weekly or seasonal price cycles
+
+#### 3️⃣ Prophet (by Meta/Facebook)
+
+- **Type:** Additive decomposition model
+- **Configuration:** Weekly seasonality (>30 data points), yearly seasonality (>365 points), changepoint_prior_scale=0.05
+- **How it works:** Decomposes prices into `trend + seasonality + holidays + noise`. Automatically detects **structural changepoints** — moments when the price pattern permanently shifts (e.g., when a new road opens to a market, or a policy change affects trade). The low changepoint_prior_scale (0.05) prevents overfitting to noise.
+- **Library:** `prophet 1.1.5+`
+- **When it wins:** Markets with structural changes, crops with missing data gaps
+
+#### 4️⃣ LSTM-Lite — Lightweight Recurrent Neural Network
+
+- **Type:** Deep learning — custom pure-NumPy implementation
+- **Architecture:** Single-layer Elman RNN with input gating mechanism, 8 hidden units
+- **How it works:** Processes price sequences one timestep at a time, maintaining a "hidden state" (memory) that captures temporal patterns. The **input gate** (sigmoid activation) learns which new price information to incorporate vs. what to ignore. The hidden state update uses tanh activation for bounded outputs.
+- **Training:** 100 epochs, learning rate 0.01, gradient clipping to [-1, 1] for numerical stability
+- **Key detail:** Implemented in pure NumPy — no PyTorch/TensorFlow required at runtime, making deployment lightweight
+- **When it wins:** Complex non-linear price patterns that statistical models miss
+
+#### 5️⃣ Gradient Boosting Regressor (GBR)
+
+- **Type:** Tree-based ensemble (scikit-learn)
+- **Configuration:** 200 estimators, learning_rate=0.05, max_depth=3
+- **Features used:**
+  - `price_pct_change_1d` — yesterday's percent change
+  - `price_pct_change_7d` — weekly percent change
+  - `momentum` — 7-day moving average minus 14-day moving average
+  - `volatility_cv` — coefficient of variation over 14 days
+- **How it works:** Iteratively builds shallow decision trees (max_depth=3), where each new tree specifically corrects the errors of the previous ensemble. The low learning rate (0.05) ensures gradual, stable improvement.
+- **Library:** `scikit-learn 1.5+`
+- **When it wins:** When engineered features (momentum, volatility) are strong predictors
+
+#### 6️⃣ XGBoost & LightGBM
+
+- **Type:** Advanced gradient boosting frameworks
+- **Configuration:** 200 estimators, max_depth=4, subsample=0.8, colsample_bytree=0.8
+- **How they differ from GBR:**
+  - **L1/L2 regularization** prevents overfitting on small datasets
+  - **Column subsampling** (80%) adds diversity between trees
+  - **Row subsampling** (80%) acts like bagging for variance reduction
+  - **Histogram-based splitting** makes training 10x faster
+- **Libraries:** `xgboost 2.0+`, `lightgbm 4.3+`
+- **When they win:** Complex feature interactions, larger datasets
+
+### Ensemble Weighting — How Models Are Combined
+
+RASS doesn't just pick one model. It **automatically determines the optimal weight for each model** based on recent performance:
+
+**Step 1:** Split historical data into ~80% training, ~20% holdout (the 3–7 most recent days)
+
+**Step 2:** Each model independently trains on the training set and predicts the holdout period
+
+**Step 3:** Calculate RMSE (Root Mean Square Error) for each model against actual holdout prices
+
+**Step 4:** Compute inverse-RMSE weights:
+```
+weight_i = (1 / RMSE_i) / Σ(1 / RMSE_j)
+```
+
+**Step 5:** Final ensemble forecast = weighted average of all model predictions
+
+**Concrete Example:**
+
+| Model | RMSE | Raw Weight | Normalized Weight |
+|-------|------|-----------|------------------|
+| Prophet | 15.0 | 1/15 = 0.0667 | **38.5%** |
+| SARIMA | 18.0 | 1/18 = 0.0556 | 32.1% |
+| Holt | 20.0 | 1/20 = 0.0500 | 28.9% |
+| LSTM | 200.0 | 1/200 = 0.005 | 0.5% |
+
+In this example, Prophet performed best for this specific crop/market combination and gets the highest weight. The system **automatically adapts** — a different crop might see SARIMA dominate.
+
+### Feature Engineering Pipeline
+
+Raw prices are transformed into **25+ engineered features** before model training:
+
+| Category | Features | Purpose |
+|----------|----------|---------|
+| **Lag Features** | price_lag_1, lag_3, lag_7 | Capture autoregressive patterns |
+| **Price Changes** | pct_change_1d, 3d, 7d | Momentum and trend direction |
+| **Rolling Statistics** | mean_7d/14d/30d, std_7d/14d/30d | Smoothed trends & volatility |
+| **Momentum** | MA(7) − MA(14) | Short vs. long-term trend divergence |
+| **Seasonal** | season_code (A=0, B=1, C=2), sin/cos transforms | Rwanda's agricultural calendar |
+| **External** | rainfall_anomaly, fuel_price_index, supply/demand | Environmental & economic context |
+| **Geographic** | distance_to_Kigali, is_urban, road_quality | Location-based price factors |
+
+### Confidence Intervals
+
+Every prediction includes uncertainty bounds that honestly communicate forecast certainty:
+
+```
+margin = z_score × std_error × (1 + 0.05 × days_ahead)
+Lower = max(0, prediction − margin)
+Upper = prediction + margin
+```
+
+**Key insight:** Uncertainty **widens** for predictions further in the future. A 1-day forecast might have ±5% bounds, while a 14-day forecast might have ±15% bounds. This prevents false confidence in distant predictions.
+
+### Anomaly Detection
+
+Automatic flagging of abnormal price movements using **Z-score statistical analysis:**
+
+```
+z_score = (current_price − historical_mean) / standard_deviation
+```
+
+| Z-Score | Severity | Probability | Action |
+|---------|----------|------------|--------|
+| |z| > 3.5 | 🔴 **High** | <0.05% | Immediate investigation — possible market disruption |
+| |z| > 2.5 | 🟡 **Medium** | <1.2% | Review required — significant deviation |
+| |z| ≤ 2.5 | 🟢 **Normal** | >98.8% | Within expected variation |
+
+### Decision Engine — Sell/Hold/Monitor
+
+The system generates actionable recommendations based on predicted price changes:
+
+```
+price_change_pct = ((forecast_median − current_price) / current_price) × 100
+
+If volatility is LOW:
+  • Expected rise > +5%  → "HOLD" (wait for better price)
+  • Expected drop > −5%  → "SELL NOW" (avoid losses)
+  • Otherwise            → "MONITOR" (no clear signal)
+
+If volatility is HIGH:
+  • Thresholds widen to ±8% (more conservative in uncertain markets)
+
+If confidence < 60%:
+  • Always returns "MONITOR" (insufficient certainty to advise action)
+```
+
+---
+
+## 🎯 AI Usage Per Role
+
+One of RASS's most distinctive features is that **the same underlying data produces completely different, role-appropriate advice**. A rising price is good news for a seller but a warning for a buyer.
+
+### 🌱 Farmer — "What should I grow? When should I harvest?"
+
+| AI Feature | How It Works | What the Farmer Sees |
+|-----------|--------------|---------------------|
+| **Crop Recommendations** | Analyzes price trends + demand data for all crops → ranks by expected profit | "🌽 Maize prices predicted to rise 15% next month — consider planting" |
+| **Profitability Calculator** | Current market price × typical yield/hectare − estimated input costs | Interactive: select a crop → see estimated profit per hectare in RWF |
+| **Seasonal Calendar** | Maps Rwanda's Season A (Sep–Feb), B (Mar–Jun), C (Jul–Aug) to optimal planting windows | "You are in Season B — ideal for beans, soya, and vegetables" |
+| **Harvest Timing** | Forecast models predict price peaks → advises optimal sell timing | "Hold your rice 2 more weeks — prices expected to peak around June 15" |
+| **Price Comparison** | Fetches latest prices from all markets → shows which market pays the highest | "Kigali: 680 RWF/kg vs. Muhanga: 640 RWF/kg — sell in Kigali for +6.3%" |
+
+### 🏢 Cooperative Manager — "When should we sell?"
+
+| AI Feature | How It Works | What the Manager Sees |
+|-----------|--------------|---------------------|
+| **📈 SELL NOW Alerts** | Inventory crops × price trends → if at peak AND predicted to fall → urgent signal | 🔴 "SELL IMMEDIATELY — Beans at 720 RWF/kg, expected to drop 12% in 2 weeks" |
+| **⏳ HOLD Advice** | Rising prices + positive momentum → advises patience | ✅ "HOLD Maize — prices rising, expected +8% in 10 days, hold for +56,000 RWF" |
+| **💰 Revenue Optimizer** | (inventory × current price) vs. (inventory × forecast price) per crop | "Sell beans now: 2,160,000 RWF. Hold maize: +120,000 if waited 10 days" |
+| **📊 Price vs Inventory** | Dual-axis chart: crop quantities overlaid with market prices | Large green bars = sell candidates (high inventory + high price) |
+| **🌍 Demand Signals** | Order volume analysis per crop vs. inventory | "⚡ Hot: Rice (15 orders) · ⚠️ Oversupplied: Cassava (+5,000 kg surplus)" |
+| **🔮 14-Day Forecast** | Per-crop AreaCharts with sell-point markers | Green star on chart: "📈 SELL HERE — peak predicted March 25" |
+| **🏆 Performance Score** | 0–100 based on sell timing, turnover, listings, farmer engagement | "Score: 78/100 — Create 2 more listings to reach 85" |
+
+### 🛒 Buyer — "When should I buy?"
+
+| AI Feature | How It Works | What the Buyer Sees |
+|-----------|--------------|---------------------|
+| **🛒 Buy Now Signals** | Current price < average AND about to rise → buy before increase | 🟢 "BUY NOW — Rice at 720 RWF/kg, expected to rise to 810 (+12.5%)" |
+| **📈 Rise Alerts** | High-volatility crops with upward trend → urgent warning | 🟠 "ACT FAST — Tomatoes rising rapidly, +25% volatility this week" |
+| **⏳ Wait to Buy** | Downward price trends → save money by waiting | 🔵 "WAIT — Potatoes falling, save ~45 RWF/kg by buying next week" |
+| **💰 Calculator** | Current cost vs. optimal buy date cost per crop ordered | "500kg now: 175,000 RWF · March 22: 162,500 RWF · Save: 12,500 RWF" |
+| **🌾 Seasonal Guide** | Rwanda's 3 seasons → buying strategy per period | "Season A harvest → Prices DROP → Best window for staple crops" |
+| **📊 Market Intel** | Total supply (listings) vs. demand (orders) per crop | Gap chart showing excess supply crops (= cheaper purchasing) |
+| **🏆 Procurement Score** | 0–100 based on buy timing vs. trends, variety, frequency | "Score: 72 — Time purchases with AI signals to improve by 15%" |
+| **💬 AI Commentary** | Natural language market analysis | "Maize expected to rise 12% in 2 weeks. Recommend ordering now." |
+
+### 📊 Market Agent — "What's happening in my market?"
+
+| AI Feature | How It Works | What the Agent Sees |
+|-----------|--------------|---------------------|
+| **Trending Crops** | Ranks by demand × price momentum | "🔥 Beans (+18%), Maize (+12%) trending this week" |
+| **Soon-to-Rise** | Positive momentum signals from forecast | "📈 Watch: Sorghum, Wheat — predicted +10% increase" |
+| **Soon-to-Fall** | Negative momentum signals | "📉 Declining: Tomatoes, Potatoes — oversupply expected" |
+| **Sentiment Gauge** | Aggregate indicator per crop | 🟢 Bullish · 🟡 Neutral · 🔴 Bearish |
+| **Coverage Score** | Submissions vs. expected coverage | "74% coverage — submit 3 more crops to reach 90%" |
+| **Anomaly Flags** | Z-score on agent's own submissions | "⚠️ Rice at 1,200 RWF/kg is 2.8σ above average — verify" |
+
+### 🚛 Transporter — "Where's the demand?"
+
+| AI Feature | How It Works | What the Transporter Sees |
+|-----------|--------------|---------------------|
+| **Route Demand** | Transport request pattern analysis | "🔥 Kigali ↔ Muhanga has 3x normal demand this week" |
+| **Earnings Tips** | Revenue per route/kg/km comparison | "Best: Huye → Kigali at 850 RWF/km" |
+| **Peak Alerts** | Seasonal demand spike prediction | "Season A harvest (January) — demand peaks!" |
+
+### 🏛 Government — "Is the food supply stable?"
+
+| AI Feature | How It Works | What the Official Sees |
+|-----------|--------------|---------------------|
+| **🔴 Critical Alerts** | Cross-market anomaly detection (>2.5σ) | "Bean prices spiked 35% in Eastern Province in 3 days" |
+| **🟡 Watch Items** | Moderate volatility + supply imbalances | "Maize supply down 20% in Northern Province" |
+| **🟢 Positive Signals** | Healthy market indicators | "Rice trade volume up 45% year-over-year" |
+| **Supply vs Demand** | National BarCharts per crop | Visual gap analysis: shortages vs. surpluses |
+| **National Forecast** | Top 8 crops with confidence intervals | 14-day forward cards per crop |
+
+---
+
+## ⚙️ How the Forecasting Model Works
+
+### Complete Pipeline — End to End
+
+```
+STEP 1: DATA COLLECTION
+  Market agents submit daily prices from local markets across Rwanda
+  → Stored in PostgreSQL MarketPrice table
+  → Historical data accumulates over weeks and months
+
+STEP 2: FEATURE ENGINEERING (25+ features)
+  Raw prices are transformed into:
+  • Lag features (1-day, 3-day, 7-day lookbacks)
+  • Rolling statistics (7/14/30-day means and standard deviations)
+  • Momentum indicators (short MA − long MA)
+  • Seasonal encodings (Rwanda Season A=0, B=1, C=2 + sin/cos)
+  • External factors (rainfall anomaly, fuel prices, supply/demand)
+  • Geographic features (distance to Kigali, urban/rural, road quality)
+
+STEP 3: PARALLEL MODEL TRAINING
+  6 models train independently on historical + engineered features:
+  ┌─────────────┬──────────────┬─────────────┐
+  │ Holt-Linear │   SARIMA     │   Prophet   │
+  │ LSTM-Lite   │     GBR      │ XGB/LGBM   │
+  └─────────────┴──────────────┴─────────────┘
+
+STEP 4: WALK-FORWARD VALIDATION
+  • Hold out the 3–7 most recent days as a test set
+  • Each model predicts the holdout period
+  • Calculate RMSE for each model vs. actual prices
+  • Compute inverse-RMSE weights (better = higher weight)
+
+STEP 5: WEIGHTED ENSEMBLE COMBINATION
+  Final prediction = Σ(weight_i × model_i_prediction)
+  The best-performing model automatically gets the most influence
+
+STEP 6: UNCERTAINTY QUANTIFICATION
+  • 80% confidence intervals using z=1.28
+  • Intervals widen with forecast horizon (day 14 > day 1)
+  • Overall confidence score (0.0 to 1.0) based on data quality + model agreement
+
+STEP 7: TREND & VOLATILITY CLASSIFICATION
+  • Trend: UP / DOWN / STABLE (via linear regression slope on forecasts)
+  • Volatility: LOW / MEDIUM / HIGH (via coefficient of variation)
+
+STEP 8: DECISION ENGINE
+  • Generates recommendation: "Sell Now" / "Hold" / "Monitor"
+  • Produces natural language explanation
+  • Identifies top contributing factors
+
+STEP 9: ROLE-SPECIFIC DELIVERY
+  Same forecast → different advice per user role:
+  • Farmer: "When to harvest and sell"
+  • Cooperative: "When to sell inventory"
+  • Buyer: "When to purchase"
+  • Government: "Where to intervene"
+```
+
+### Key Model Parameters
+
+| Component | Parameter | Value | What It Controls |
+|-----------|-----------|-------|-----------------|
+| Holt | α (level) | 0.3 | Speed of reaction to new price observations |
+| Holt | β (trend) | 0.1 | Sensitivity to trend changes |
+| SARIMA | Seasonal period | 7 days | Weekly market cycle detection |
+| GBR | n_estimators | 200 | Number of boosting iterations |
+| GBR | learning_rate | 0.05 | Step size per boosting round |
+| GBR | max_depth | 3 | Prevents overfitting (shallow trees) |
+| LSTM | Hidden units | 8 | Neural network memory capacity |
+| LSTM | Epochs | 100 | Training convergence iterations |
+| XGBoost | Subsample | 0.8 | Data fraction per tree (variance reduction) |
+| XGBoost | colsample | 0.8 | Feature fraction per tree (diversity) |
+| Anomaly | Z-threshold | 2.5 | Standard deviations for anomaly flag |
+| Confidence | Z-score | 1.28 | 80% prediction interval width |
+| Ensemble | Holdout size | 3–7 days | Recent performance validation window |
+
+---
+
+## 📡 API Endpoints
+
+### Authentication & Users
+| Method | Endpoint | Description |
+|--------|----------|-------------|
+| POST | `/api/auth/login` | Authenticate user → receive JWT token |
+| POST | `/api/auth/register` | Register new user account |
+| GET | `/api/buyers/my-profile` | Get buyer profile |
+| GET | `/api/farmers/my-profile` | Get farmer profile |
+| GET | `/api/cooperative/my-cooperative` | Get cooperative data + members |
+| GET | `/api/transporters/profile` | Get transporter profile |
+
+### Market Data & Prices
+| Method | Endpoint | Description |
+|--------|----------|-------------|
+| GET | `/api/marketprices/latest` | All latest market prices across Rwanda |
+| GET | `/api/market-listings` | Browse marketplace listings (with pagination) |
+| POST | `/api/market-agents/submit-price` | Submit a price observation from a market |
+| GET | `/api/payments/price-trends` | Historical price trend data |
+| GET | `/api/reference/crops` | List of all tracked crop types |
+| GET | `/api/reference/markets` | List of all market locations |
+| GET | `/api/reference/platform-stats` | Platform-wide statistics |
+
+### AI & Forecasting
+| Method | Endpoint | Description |
+|--------|----------|-------------|
+| GET | `/api/forecast/price/enhanced` | ML-enhanced price forecast for a specific crop/market |
+| GET | `/api/forecast/national-overview` | National market intelligence summary |
+| GET | `/api/forecast/volatility-report` | Volatility analysis per crop |
+| POST | `/api/forecast/supply` | Supply estimation forecast |
+| POST | `/api/forecast/demand` | Demand prediction forecast |
+| POST | `/api/detect/anomaly` | Price anomaly detection (Z-score) |
+
+### Trading & Orders
+| Method | Endpoint | Description |
+|--------|----------|-------------|
+| POST | `/api/buyer-orders` | Place a purchase order |
+| GET | `/api/buyers/orders` | Retrieve buyer's order history |
+| POST | `/api/cooperative/market-listing` | Create a marketplace listing |
+| GET | `/api/cooperative/market-listings` | Get cooperative's listings |
+| POST | `/api/transport/request` | Request transport service |
+| GET | `/api/tracking/{id}` | Track a shipment via GPS |
+
+### Communication
+| Method | Endpoint | Description |
+|--------|----------|-------------|
+| GET | `/api/chat/{userId}` | Get chat history with a user |
+| POST | `/api/chat/send` | Send a message |
+| GET | `/api/notifications` | Get user notifications |
+
+---
+
+## 🗄 Database Schema
+
+RASS uses **PostgreSQL 16** with **23 core tables** managed via Entity Framework Core migrations:
+
+### Core Entity Relationships
+
+```
+┌──────────────┐     ┌──────────────┐     ┌──────────────┐
+│    Users     │     │    Roles     │     │  UserRoles   │
+│──────────────│     │──────────────│     │──────────────│
+│ Id (PK)      │◄───┐│ Id (PK)      │◄────│ UserId (FK)  │
+│ FullName     │    ││ Name         │     │ RoleId (FK)  │
+│ Email        │    │└──────────────┘     └──────────────┘
+│ PasswordHash │    │
+│ Phone        │    │
+│ District     │    │
+│ IsActive     │    │
+└──────────────┘    │
+         ▲          │
+    ┌────┴────┐ ┌───┴────────┐ ┌──────────────┐ ┌─────────────┐
+    │ Farmers │ │   Buyers   │ │ Cooperatives │ │ Transporters│
+    │─────────│ │────────────│ │──────────────│ │─────────────│
+    │ UserId  │ │ UserId     │ │ ManagerId    │ │ UserId      │
+    │ CoopId  │ │ Org/Type   │ │ Name/Dist    │ │ LicensePlate│
+    │ FarmSize│ │ Location   │ │ Province     │ │ Capacity    │
+    └─────────┘ └────────────┘ └──────────────┘ └─────────────┘
+```
+
+### Trade Flow
+
+```
+HarvestDeclaration → LotContribution → Lot (Inventory)
+                                           │
+                                      MarketListing
+                                           │
+                                       BuyerOrder ──→ Contract
+                                           │
+                                    TransportRequest ──→ Tracking (GPS)
+                                           │
+                                      PaymentLedger
+```
+
+### All 23 Tables
+
+| Category | Tables |
+|----------|--------|
+| **Users & Auth** | User, Role, UserRole, Farmer, Buyer, Cooperative, Transporter |
+| **Trading** | MarketListing, MarketPrice, Lot, LotContribution, HarvestDeclaration, Contract |
+| **Operations** | TransportRequest, StorageFacility, StorageBooking, CartItem |
+| **Finance** | PaymentLedger, FarmerBalance |
+| **Communication** | ChatMessage, Notification |
+| **Administration** | AuditLog, Telemetry, MarketReport |
+
+---
+
+## 🚀 Getting Started
+
+### Prerequisites
+
+- [.NET 10 SDK](https://dotnet.microsoft.com/download) — Backend API
+- [Node.js 18+](https://nodejs.org/) — Frontend build
+- [Python 3.9+](https://python.org/) — ML forecasting service
+- [PostgreSQL 16](https://postgresql.org/) — Database (or use Docker)
+- [Docker & Docker Compose](https://docker.com/) — Recommended for easy setup
+
+### Option 1: Docker Compose (Recommended)
+
+```bash
+# Clone the repository
+git clone https://github.com/your-org/RASS.git
+cd RASS
+
+# Start all 4 services with a single command
+docker-compose up -d
+
+# Access the platform:
+# 🌐 Frontend:   http://localhost:4173
+# 🔧 Backend:    http://localhost:8080
+# 📊 Swagger:    http://localhost:8080/swagger
+# 🗄️ PgAdmin:    http://localhost:5050
+# 💾 Database:   localhost:5433
+```
+
+### Option 2: Manual Setup
+
+```bash
+# 1. Database
+# Create a PostgreSQL database named 'rass_db'
+
+# 2. Backend (.NET 10)
+cd backend
+dotnet restore                # Install NuGet packages
+dotnet ef database update     # Apply EF Core migrations
+dotnet run                    # Starts on http://localhost:5172
+
+# 3. Forecasting Service (Python)
+cd forecasting-service
+pip install -r requirements.txt   # Install ML libraries
+uvicorn main:app --host 0.0.0.0 --port 8000
+
+# 4. Frontend (React 19)
+cd frontend
+npm install                   # Install npm packages
+npm run dev                   # Starts on http://localhost:5173
+```
+
+### Environment Variables
+
+| Variable | Default | Description |
+|----------|---------|-------------|
+| `ConnectionStrings__DefaultConnection` | *(see docker-compose.yml)* | PostgreSQL connection string |
+| `Jwt__Key` | *(configured)* | JWT signing secret key |
+| `Jwt__Issuer` | `RASS` | JWT token issuer identifier |
+| `Jwt__Audience` | `RASS-Users` | JWT token audience |
+| `VITE_API_URL` | `http://localhost:5172` | Backend API URL for frontend |
+
+---
+
+## 📁 Project Structure
+
+```
+RASS/
+├── backend/                          # ASP.NET Core 10 REST API
+│   ├── Controllers/                  # 23 API controllers
+│   │   ├── AuthController.cs         #   Login, register, JWT tokens
+│   │   ├── ForecastController.cs     #   AI forecasting proxy → Python
+│   │   ├── GovernmentController.cs   #   National analytics + early warnings
+│   │   ├── CooperativeController.cs  #   Cooperative management + listings
+│   │   ├── BuyerOrdersController.cs  #   Order lifecycle management
+│   │   ├── MarketPricesController.cs #   Price tracking + reporting
+│   │   ├── TransportController.cs    #   Transport request CRUD
+│   │   ├── TrackingController.cs     #   GPS shipment tracking
+│   │   ├── ChatController.cs         #   Real-time messaging
+│   │   ├── PaymentsController.cs     #   Payment processing + ledger
+│   │   └── ...                       #   13 more controllers
+│   ├── Models/                       # 23 EF Core entity models
+│   ├── Data/                         # AppDbContext + migrations
+│   ├── Services/                     # TokenService, ForecastingService
+│   ├── Hubs/                         # SignalR NotificationHub
+│   └── Program.cs                    # Startup, middleware, auth config
+│
+├── frontend/                         # React 19 + TypeScript SPA
+│   ├── src/
+│   │   ├── pages/                    # 25 page components
+│   │   │   ├── BuyerDashboardPage.tsx      # ~1,700 lines — AI buying intelligence
+│   │   │   ├── CooperativeDashboardPage.tsx # ~2,100 lines — AI sell-timing
+│   │   │   ├── FarmerDashboardPage.tsx     # ~1,000 lines — crop advisory
+│   │   │   ├── MarketAgentDashboardPage.tsx # ~880 lines — price analytics
+│   │   │   ├── TransporterDashboardPage.tsx # ~620 lines — GPS tracking
+│   │   │   ├── GovernmentDashboardPage.tsx  # National early warnings
+│   │   │   ├── AdminPage.tsx               # System administration
+│   │   │   └── ...                         # 18 more pages
+│   │   ├── components/               # Modal, DataTable, StatCard, NavBar, etc.
+│   │   ├── context/                  # AuthContext, CartContext, SignalRContext
+│   │   ├── api/                      # Axios client + Unsplash integration
+│   │   ├── i18n/                     # English + Kinyarwanda translations
+│   │   └── types.ts                  # Shared TypeScript type definitions
+│   └── package.json
+│
+├── forecasting-service/              # Python ML microservice
+│   ├── main.py                       # FastAPI endpoints + RoleAdvisor class
+│   ├── model.py                      # 6 ML algorithms + ensemble pipeline
+│   └── requirements.txt              # All Python/ML dependencies
+│
+├── docker-compose.yml                # 4-service orchestration config
+├── Rass.sln                          # Visual Studio solution file
+└── README.md                         # This file
+```
+
+---
+
+## 🇷🇼 Rwanda Agricultural Context
+
+RASS is purpose-built for Rwanda's unique agricultural ecosystem. The AI model is specifically tuned for Rwandan crop prices, seasonal patterns, and market geography.
+
+### Three Growing Seasons
+
+| Season | Period | Production Share | Price Impact | RASS AI Strategy |
+|--------|--------|-----------------|-------------|------------------|
+| **Season A** | September – February | ~60% of annual output | Prices **DROP** during harvest glut | Buyers: BUY NOW · Cooperatives: STORE for later |
+| **Season B** | March – June | ~30% of annual output | **Moderate**, balanced prices | All: MONITOR signals carefully |
+| **Season C** | July – August | ~10% of annual output | Prices **RISE** (scarcity) | Cooperatives: SELL stored inventory · Buyers: stock up early |
+
+### Key Crops & Volatility Profiles
+
+| Crop | Base Price (RWF/kg) | Volatility | Risk Level | Seasonal Sensitivity |
+|------|---------------------|-----------|------------|---------------------|
+| Maize | ~350 | 12% | 🟢 Low | Moderate — stable staple |
+| Beans | ~680 | 18% | 🟡 Medium | High demand year-round |
+| Rice | ~780 | 13% | 🟢 Low | Premium crop, steady |
+| Potatoes | ~420 | 22% | 🟠 High | Perishable, big seasonal swings |
+| Tomatoes | ~500 | 45% | 🔴 Very High | Most volatile — high risk/reward |
+| Cassava | ~180 | 10% | 🟢 Low | Drought-resistant, very stable |
+| Sorghum | ~280 | 14% | 🟢 Low | Traditional, predictable |
+| Wheat | ~520 | 16% | 🟡 Medium | Growing demand, import-sensitive |
+
+### Market Geography & Price Premiums
+
+| Market | Premium | Type | Notes |
+|--------|---------|------|-------|
+| **Kigali** | +5% | Urban hub | Highest demand, highest prices |
+| **Muhanga** | −3% | Central | Good road access |
+| **Huye** | −3% | Southern | University town market |
+| **Nyagatare** | −6% | Rural | Agricultural production zone |
+| **Rusizi** | −5% | Border | DRC cross-border trade |
+
+Road quality (paved/gravel/dirt) and distance to Kigali are factored into all price predictions as geographic features.
+
+---
+
+## 🗺 Future Roadmap
+
+- [ ] **Mobile App** — React Native companion for farmers and field agents without desktop access
+- [ ] **SMS Price Alerts** — Twilio integration for users without smartphones
+- [ ] **Live Weather API** — Real-time rainfall data feeding the forecasting model for better predictions
+- [ ] **Blockchain Payment Ledger** — Immutable, auditable financial records
+- [ ] **Multi-Country Expansion** — Adapt for Burundi, Uganda, and DRC agricultural markets
+- [ ] **Satellite Crop Monitoring** — Remote sensing imagery for crop health assessment
+- [ ] **Offline PWA Mode** — Progressive Web App with sync for areas with poor connectivity
+- [ ] **Advanced Route Optimization** — Google Maps integration for transport path planning
+- [ ] **Automated Market Reports** — Weekly AI-generated PDF reports for government officials
+
+---
+
+## 👨‍💻 Contributors
+
+| Role | Contributor |
+|------|------------|
+| **Full-Stack Developer** | Final Year Student, AUCA |
+| **AI Pair Programmer** | GitHub Copilot |
+| **Academic Institution** | Adventist University of Central Africa (AUCA) |
+
+---
+
+<p align="center">
+  <strong>🌾 RASS — Empowering Rwanda's Agricultural Future Through Technology & AI 🌾</strong>
+</p>
+
+<p align="center">
+  <img src="https://img.shields.io/badge/Made_with-❤️_in_Rwanda-00793E?style=for-the-badge" alt="Made in Rwanda"/>
+</p>
