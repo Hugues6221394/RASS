@@ -1,0 +1,72 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Rwanda Agri Stability System (RASS): Technical Report v2.0</title>
+<meta name="description" content="Technical report on the Rwanda Agri Stability System (RASS): architecture, district-level price regulation and out-of-sample evaluation of market price forecasting on WFP Rwanda retail prices.">
+<meta name="citation_title" content="Rwanda Agri Stability System (RASS): Technical Report, version 2.0">
+<meta name="citation_author" content="Iriza Gatera, M.">
+<meta name="citation_author" content="Atete Muhire, G. V.">
+<meta name="citation_author" content="Gaju, S.">
+<meta name="citation_author" content="Ngabonziza, H.">
+<meta name="citation_publication_date" content="2026/11">
+<meta name="citation_technical_report_institution" content="Adventist University of Central Africa">
+<meta name="citation_pdf_url" content="RASS-Technical-Report-v2.0.pdf">
+<style>
+  :root { --green:#00793E; --gold:#E5BE01; --blue:#00A1DE; --ink:#1F2933; }
+  body { margin:0; font-family: Georgia, "Palatino Linotype", serif; color:var(--ink); background:#fff; line-height:1.6; }
+  header { background:var(--green); color:#fff; padding:56px 24px 40px; border-bottom:8px solid var(--gold); box-shadow: 0 6px 0 var(--blue); }
+  .wrap { max-width:860px; margin:0 auto; }
+  .kicker { font-family: Helvetica, Arial, sans-serif; font-weight:700; letter-spacing:.08em; font-size:13px; opacity:.9; }
+  h1 { font-family: Helvetica, Arial, sans-serif; font-size:40px; line-height:1.15; margin:.3em 0 .2em; }
+  .sub { font-family: Helvetica, Arial, sans-serif; font-size:19px; opacity:.95; }
+  main { padding:40px 24px 64px; }
+  .btn { display:inline-block; background:var(--green); color:#fff; text-decoration:none; font-family: Helvetica, Arial, sans-serif; font-weight:700; padding:14px 22px; border-radius:6px; margin:8px 12px 8px 0; }
+  .btn.alt { background:#fff; color:var(--green); border:2px solid var(--green); }
+  h2 { font-family: Helvetica, Arial, sans-serif; color:var(--green); font-size:20px; margin-top:2em; }
+  .meta { font-family: Helvetica, Arial, sans-serif; font-size:15px; }
+  .meta b { display:inline-block; min-width:120px; }
+  .box { background:#F3F6F4; border-left:4px solid var(--green); padding:14px 18px; }
+  table { border-collapse:collapse; width:100%; font-size:15px; }
+  th, td { text-align:left; padding:6px 8px; border-bottom:1px solid #ddd; }
+  footer { font-family: Helvetica, Arial, sans-serif; font-size:13px; color:#666; border-top:1px solid #ddd; padding:20px 24px; }
+  iframe { width:100%; height:80vh; border:1px solid #ddd; margin-top:12px; }
+</style>
+</head>
+<body>
+<header><div class="wrap">
+  <div class="kicker">TECHNICAL REPORT &nbsp;|&nbsp; VERSION 2.0 &nbsp;|&nbsp; NOVEMBER 2026</div>
+  <h1>Rwanda Agri Stability System (RASS)</h1>
+  <div class="sub">Architecture, district-level price regulation, and out-of-sample evaluation of market price forecasting on WFP Rwanda retail prices</div>
+</div></header>
+<main class="wrap">
+  <a class="btn" href="RASS-Technical-Report-v2.0.pdf" download>Download PDF (52 pages)</a>
+  <a class="btn alt" href="RASS-Technical-Report-v2.0.pdf" target="_blank" rel="noopener">Open in browser</a>
+
+  <h2>Authors</h2>
+  <div class="meta">
+    <p><b>Authors</b> Iriza Gatera M., Atete Muhire G. V., Gaju S., Ngabonziza H.<br>
+    <b>Supervisor</b> Mr. Laurent Maniraho<br>
+    <b>Institution</b> Faculty of Information Technology, Adventist University of Central Africa (AUCA), Kigali<br>
+    <b>Prepared for</b> Ministry of Agriculture and Animal Resources (MINAGRI) and Rwanda Agriculture and Animal Resources Development Board (RAB)</p>
+  </div>
+
+  <h2>Summary</h2>
+  <p>RASS is a web platform that brings farmers, cooperatives, buyers, market agents, transporters, storage operators and government officials onto one system. It provides national price intelligence, district-level price regulation enforced at the point of listing, and short-term price forecasts with uncertainty intervals and role-specific advice.</p>
+  <div class="box">
+    <p><b>Key evaluation result.</b> On 28 WFP retail price series (6 crops, 10 markets, 2018&ndash;2026), evaluated out of sample, the platform's statistical ensemble (SARIMA, Prophet, Holt) achieves a mean absolute percentage error of 9.6%. That compares with 11.1% for a naive forecast. It reduces the naive error by 15.4% two months ahead and 22.1% three months ahead (both p &lt; 0.001), and its 80% intervals cover 84&ndash;88% of outcomes.</p>
+  </div>
+  <p>The report also documents the defects found by an independent code audit and their correction. It assesses security and data protection and proposes a roadmap to a supervised pilot.</p>
+
+  <h2>Suggested citation</h2>
+  <p class="meta">Iriza Gatera, M., Atete Muhire, G. V., Gaju, S., &amp; Ngabonziza, H. (2026). <i>Rwanda Agri Stability System (RASS): Technical Report, version 2.0</i>. Faculty of Information Technology, Adventist University of Central Africa. Prepared for MINAGRI and RAB.</p>
+
+  <h2>Preview</h2>
+  <iframe src="RASS-Technical-Report-v2.0.pdf" title="RASS Technical Report v2.0"></iframe>
+</main>
+<footer><div class="wrap">
+  Evaluation data: WFP VAM Food Prices &ndash; Rwanda, Humanitarian Data Exchange, licence CC BY-IGO. RASS is a research prototype and not an official system of the Government of Rwanda.
+</div></footer>
+</body>
+</html>
